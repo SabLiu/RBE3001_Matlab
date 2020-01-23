@@ -38,9 +38,10 @@ myHIDSimplePacketComs.connect();
 % Create a PacketProcessor object to send data to the nucleo firmware
 pp = PacketProcessor(myHIDSimplePacketComs); 
 try
-  SERV_ID = 01;            % we will be talking to server ID 01 on
-                           % the Nucleo
+%   SERV_ID = 01;            % we will be talking to server ID 01 on
+                % the Nucleo
 
+  SERV_ID = 01;
   DEBUG   = true;          % enables/disables debug prints
 
   % Instantiate a packet - the following instruction allocates 64
@@ -51,7 +52,8 @@ try
   % The following code generates a sinusoidal trajectory to be
   % executed on joint 1 of the arm and iteratively sends the list of
   % setpoints to the Nucleo firmware. 
-  viaPts = [0, -400, 400, -400, 400, 0];
+%   viaPts = [0, -400, 400, -400, 400, 0];
+    viaPts = [0,0];
 
   for k = viaPts
       tic
@@ -64,8 +66,17 @@ try
        
        pause(0.003); % Minimum amount of time required between write and read
        
-       %pp.read reads a returned 15 float backet from the nucleo.
+       %pp.read reads a returned 15 float Packet from the nucleo.
        returnPacket = pp.read(SERV_ID);
+       printMatrix = zeros(1,6);
+%        Parse through status packet 
+       for x = 0:3
+           printMatrix((x*3)+1) = returnPacket((x*3)+1);
+           printMatrix((x*3)+2) = returnPacket((x*3)+2);
+       end 
+       % Output to CSV
+        dlmwrite('test.csv', printMatrix, '-append');
+       disp(printMatrix);
       toc
 
       if DEBUG
