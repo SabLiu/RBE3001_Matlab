@@ -68,15 +68,30 @@ try
        
        %pp.read reads a returned 15 float Packet from the nucleo.
        returnPacket = pp.read(SERV_ID);
-       printMatrix = zeros(1,6);
-%        Parse through status packet 
-       for x = 0:3
-           printMatrix((x*3)+1) = returnPacket((x*3)+1);
-           printMatrix((x*3)+2) = returnPacket((x*3)+2);
-       end 
-       % Output to CSV
-        dlmwrite('test.csv', printMatrix, '-append');
-       disp(printMatrix);
+%        printMatrix = zeros(1,6);
+% %        Parse through status packet 
+%        for x = 0:3
+%            printMatrix((x*3)+1) = returnPacket((x*3)+1);
+%            printMatrix((x*3)+2) = returnPacket((x*3)+2);
+%        end 
+%        % Output to CSV
+%         dlmwrite('test.csv', printMatrix, '-append');
+%        disp(printMatrix);
+    hold on  
+    an = animatedline('Marker', 'o');
+    % plots things twice
+    for x = 0:1000
+         baseAngle = returnPacket(1);
+         disp(baseAngle);
+%          if baseAngle ~= 0
+          addpoints(an, x, double(baseAngle));
+%          end 
+%          dlmwrite('test.csv', baseAngle, '-append'); 
+         pp.write(SERV_ID, packet); 
+        pause(.01); 
+        returnPacket = pp.read(SERV_ID);
+    end
+      hold off
       toc
 
       if DEBUG
@@ -85,12 +100,12 @@ try
           disp('Received Packet:');
           disp(returnPacket);
       end
-      
-      for x = 0:3
-          packet((x*3)+1)=0.1;
-          packet((x*3)+2)=0;
-          packet((x*3)+3)=0;
-      end
+%       
+%       for x = 0:3
+%           packet((x*3)+1)=0.1;
+%           packet((x*3)+2)=0;
+%           packet((x*3)+3)=0;
+%       end
       
       toc
       pause(1) %timeit(returnPacket) !FIXME why is this needed?
