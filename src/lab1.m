@@ -52,7 +52,7 @@ try
   % The following code generates a sinusoidal trajectory to be
   % executed on joint 1 of the arm 
 %   viaPts = [0, -400, 400, -400, 400, 0];
-  viaPts = [0, -400, 400; 0, -400, 400; 0, -400, 400];
+  viaPts = [140 6 -70; 330, 330, 150; -50, 200, 390];
 %     viaPts = [0];
 
   for k = 0:2
@@ -75,7 +75,8 @@ try
        for i = 0:3
            % return packet contains encoder positions
            % convert to angles and put into csv
-           printMatrix(i+2) = returnPacket((i*3)+1);%(returnPacket((i*3)+1)*2*pi)/4095;
+           printMatrix(i+2) = (returnPacket((i*3)+1)*2*pi)/4095;
+                           % this command for enc ticks returnPacket((i*3)+1);
        end 
        % Output to CSV
         dlmwrite('test.csv', printMatrix, '-append');
