@@ -53,7 +53,7 @@ try
   % executed on joint 1 of the arm and iteratively sends the list of
   % setpoints to the Nucleo firmware. 
 %   viaPts = [0, -400, 400, -400, 400, 0];
-    viaPts = [0,0];
+    viaPts = [0];
 
   for k = viaPts
       tic
@@ -78,17 +78,19 @@ try
 %         dlmwrite('test.csv', printMatrix, '-append');
 %        disp(printMatrix);
     hold on  
-    an = animatedline('Marker', 'o');
+    angleLine = animatedline('Color','b', 'LineWidth', 2);
+%     encoderLine = animatedline('Color','r', 'LineWidth', 2);
     % plots things twice
-    for x = 0:1000
-         baseAngle = returnPacket(1);
-         disp(baseAngle);
-%          if baseAngle ~= 0
-          addpoints(an, x, double(baseAngle));
-%          end 
-%          dlmwrite('test.csv', baseAngle, '-append'); 
+    timeInterval = 0.1;
+    for x = 0:100
+        encPos = returnPacket(1);
+         baseAngle = (encPos*360)/4095;
+          addpoints(angleLine, x, double(baseAngle));
+%           addpoints(encoderLine, x, double(encPos));
+            printMatrix = [x*timeInterval baseAngle];
+         dlmwrite('test.csv', printMatrix, '-append'); 
          pp.write(SERV_ID, packet); 
-        pause(.01); 
+        pause(timeInterval); 
         returnPacket = pp.read(SERV_ID);
     end
       hold off
