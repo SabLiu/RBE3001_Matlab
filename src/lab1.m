@@ -50,58 +50,65 @@ try
   packet = zeros(15, 1, 'single');
 
   % The following code generates a sinusoidal trajectory to be
-  % executed on joint 1 of the arm and iteratively sends the list of
-  % setpoints to the Nucleo firmware. 
+  % executed on joint 1 of the arm 
 %   viaPts = [0, -400, 400, -400, 400, 0];
-    viaPts = [0];
+  viaPts = [0, -400, 400; 0, -400, 400; 0, -400, 400];
+%     viaPts = [0];
 
-  for k = viaPts
+  for k = 0:2
       tic
       packet = zeros(15, 1, 'single');
-      packet(1) = k;
-
-      % Send packet to the server and get the response      
-      %pp.write sends a 15 float packet to the micro controller
-       pp.write(STATUS_SERV_ID, packet); 
-       
-       pause(0.003); % Minimum amount of time required between write and read
-       
-       %pp.read reads a returned 15 float Packet from the nucleo.
+      packet((k*3)+1) = viaPts((k*3)+1);
+      pp.write(PID_SERV_ID, packet);
+      
+      % waits for robot arm and requests status for 1 second per command
+      for x = 0:99
+          timeStep = 0.01; 
+        % send a status request
+        packet = zeros(15, 1, 'single');
+        pp.write(STATUS_SERV_ID, packet); 
+        pause(timeStep); % wait for response
        returnPacket = pp.read(STATUS_SERV_ID);
-%        printMatrix = zeros(1,6);
-% %        Parse through status packet 
-%        for x = 0:3
-%            printMatrix((x*3)+1) = returnPacket((x*3)+1);
-%            printMatrix((x*3)+2) = returnPacket((x*3)+2);
-%        end 
-%        % Output to CSV
-%         dlmwrite('test.csv', printMatrix, '-append');
-%        disp(printMatrix);
-    hold on  
-    angleLine = animatedline('Color','b', 'LineWidth', 2);
-%     encoderLine = animatedline('Color','r', 'LineWidth', 2);
-    % plots things twice
-    timeInterval = 0.01;
-    for x = 0:1000
-        encPos = returnPacket(1);
-         baseAngle = (encPos*2*pi)/4095; % returns radians 
-          addpoints(angleLine, x*timeInterval, double(baseAngle));
-%           addpoints(encoderLine, x, double(encPos));
-            printMatrix = [x*timeInterval baseAngle encPos];
-            dlmwrite('test.csv', printMatrix, '-append'); 
-         pp.write(STATUS_SERV_ID, packet); 
-        pause(timeInterval); 
-        returnPacket = pp.read(STATUS_SERV_ID);
-    end
-      hold off
+       % log values into CSV
+       printMatrix = zeros(1,4);
+       printMatrix(1) = x*timeStep+k; % time stamp for readings.  
+       for i = 0:3
+           % return packet contains encoder positions
+           % convert to angles and put into csv
+           printMatrix(i+2) = returnPacket((i*3)+1);%(returnPacket((i*3)+1)*2*pi)/4095;
+       end 
+       % Output to CSV
+        dlmwrite('test.csv', printMatrix, '-append');
+      end 
+
+%%%%%%%%%%%%%%this stuff is for plotting pretty pictures%%%%%%%%%%%%%%%%%%%
+
+%     hold on  
+%     angleLine = animatedline('Color','b', 'LineWidth', 2);
+% %     encoderLine = animatedline('Color','r', 'LineWidth', 2);
+%     % plots things twice
+%     timeInterval = 0.01;
+%     for x = 0:1000
+%         encPos = returnPacket(1);
+%          baseAngle = (encPos*2*pi)/4095; % returns radians 
+%           addpoints(angleLine, x*timeInterval, double(baseAngle));
+% %           addpoints(encoderLine, x, double(encPos));
+%             printMatrix = [x*timeInterval baseAngle encPos];
+%             dlmwrite('test.csv', printMatrix, '-append'); 
+%          pp.write(STATUS_SERV_ID, packet); 
+%         pause(timeInterval); 
+%         returnPacket = pp.read(STATUS_SERV_ID);
+%     end
+%       hold off
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       toc
 
-      if DEBUG
-          disp('Sent Packet:');
-          disp(packet);
-          disp('Received Packet:');
-          disp(returnPacket);
-      end
+%       if DEBUG
+%           disp('Sent Packet:');
+%           disp(packet);
+%           disp('Received Packet:');
+%           disp(returnPacket);
+%       end
 %       
 %       for x = 0:3
 %           packet((x*3)+1)=0.1;
@@ -110,7 +117,6 @@ try
 %       end
       
       toc
-      pause(1) %timeit(returnPacket) !FIXME why is this needed?
       
   end
   
