@@ -84,11 +84,11 @@ try
     timeInterval = 0.01;
     for x = 0:1000
         encPos = returnPacket(1);
-         baseAngle = encPos/(4095*2*pi); % returns radians 
-          addpoints(angleLine, x, double(baseAngle));
+         baseAngle = (encPos*2*pi)/4095; % returns radians 
+          addpoints(angleLine, x*timeInterval, double(baseAngle));
 %           addpoints(encoderLine, x, double(encPos));
-            printMatrix = [x*timeInterval baseAngle];
-         dlmwrite('test.csv', printMatrix, '-append'); 
+            printMatrix = [x*timeInterval baseAngle encPos];
+            dlmwrite('test.csv', printMatrix, '-append'); 
          pp.write(STATUS_SERV_ID, packet); 
         pause(timeInterval); 
         returnPacket = pp.read(STATUS_SERV_ID);
