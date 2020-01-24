@@ -38,10 +38,10 @@ myHIDSimplePacketComs.connect();
 % Create a PacketProcessor object to send data to the nucleo firmware
 pp = PacketProcessor(myHIDSimplePacketComs); 
 try
-%   SERV_ID = 01;            % we will be talking to server ID 01 on
+  PID_SERV_ID = 01;            % we will be talking to server ID 01 on
                 % the Nucleo
 
-  SERV_ID = 01;
+  STATUS_SERV_ID = 02;
   DEBUG   = true;          % enables/disables debug prints
 
   % Instantiate a packet - the following instruction allocates 64
@@ -62,12 +62,12 @@ try
 
       % Send packet to the server and get the response      
       %pp.write sends a 15 float packet to the micro controller
-       pp.write(SERV_ID, packet); 
+       pp.write(STATUS_SERV_ID, packet); 
        
        pause(0.003); % Minimum amount of time required between write and read
        
        %pp.read reads a returned 15 float Packet from the nucleo.
-       returnPacket = pp.read(SERV_ID);
+       returnPacket = pp.read(STATUS_SERV_ID);
 %        printMatrix = zeros(1,6);
 % %        Parse through status packet 
 %        for x = 0:3
@@ -81,17 +81,17 @@ try
     angleLine = animatedline('Color','b', 'LineWidth', 2);
 %     encoderLine = animatedline('Color','r', 'LineWidth', 2);
     % plots things twice
-    timeInterval = 0.1;
-    for x = 0:100
+    timeInterval = 0.01;
+    for x = 0:1000
         encPos = returnPacket(1);
-         baseAngle = (encPos*360)/4095;
+         baseAngle = encPos/(4095*2*pi); % returns radians 
           addpoints(angleLine, x, double(baseAngle));
 %           addpoints(encoderLine, x, double(encPos));
             printMatrix = [x*timeInterval baseAngle];
          dlmwrite('test.csv', printMatrix, '-append'); 
-         pp.write(SERV_ID, packet); 
+         pp.write(STATUS_SERV_ID, packet); 
         pause(timeInterval); 
-        returnPacket = pp.read(SERV_ID);
+        returnPacket = pp.read(STATUS_SERV_ID);
     end
       hold off
       toc
