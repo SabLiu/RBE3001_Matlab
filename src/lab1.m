@@ -44,47 +44,50 @@ try
     packet = zeros(15, 1, 'single');
     
     % Set PID values
-    % Joint 0 (works!)
+    % Joint 0 
     packet(1) = 0.0015;
     packet(2) = 0.0000095;
     packet(3) = 0.000001;
     % Joint 1
-    packet(4) = 0.2;
-    %   packet(5) = 0.00000001;
-    %   packet(6) = 0.00000001;
+    packet(4) = 0.0008;
+      packet(5) = 0.005;
     % Joint 2
-    packet(7) = 0.0044;
-    packet(8) = 0.0002;
-    packet(9) = 0.00009;
+    packet(7) = 0.004;
+    packet(8) = 0.0007;
+    packet(9) = 0.00013;
     
     pp.write(PID_CONFIG_SERV_ID,packet);
     pause(0.003);
     
     %% Motor Control
     % these are 3 arbitrary positions for all 3 joints
-    viaPts = [300];%[140 6 -70; 330, 330, 150; -50, 200, 390];
+    viaPts = [-471.25 -24.25 1222.5; 
+        -242 640.25 253.3; 
+        327.5 28.25 188.8; 
+        137.75 350.25 -347.45];
     
-    for k = 0   %0:1
+    for k = 0:3
         tic
         packet = zeros(15, 1, 'single');
-        packet(1) = -300;
-        packet(4) = 100;
-        packet(7) = 200;
         
         % will need to set positions with these for viaPts
-%         packet((k*3)+1) = viaPts((k*3)+1); % this is for joint 0
-%         packet((k*3)+4) = viaPts((k*3)+1); % this is for joint 0
-%         packet((k*3)+7) = viaPts((k*3)+1); % this is for joint 0
+        packet(1) = viaPts(k+1, 1); % this is for joint 0
+        packet(4) = viaPts(k+1, 2); % this is for joint 1
+        packet(7) = viaPts(k+1, 3); % this is for joint 2
         
         % set motor to those positions
         pp.write(PID_SERV_ID, packet);
+        disp(k);
         
         hold on
-        encoderLine = animatedline('Color','r', 'LineWidth', 2);
-        xlim([0 1]);
-        ylim([0,210]);
+        encoderLine1 = animatedline('Color','r', 'LineWidth', 2);
+        encoderLine2 = animatedline('Color','g', 'LineWidth', 2);
+        encoderLine3 = animatedline('Color','b', 'LineWidth', 2);
+        
+        xlim([0 3]);
+        ylim([-500 1500]);
         %% waits for robot arm and requests status
-        for x = 0:100
+        for x = 0:500
             timeStep = 0.01;
             
             % send a status request
@@ -94,10 +97,14 @@ try
             returnPacket = pp.read(STATUS_SERV_ID);
             
             % read encoder position from return packet
-            encPos = returnPacket(7); 
+            encPos1 = returnPacket(1); 
+            encPos2 = returnPacket(4); 
+            encPos3 = returnPacket(7); 
             
             % plot on graph
-            addpoints(encoderLine, x*timeStep, double(encPos));
+            addpoints(encoderLine1, x*timeStep, double(encPos1));
+            addpoints(encoderLine2, x*timeStep, double(encPos2));
+            addpoints(encoderLine3, x*timeStep, double(encPos3));
             
             % log values into CSV
             printMatrix = zeros(1,4);
