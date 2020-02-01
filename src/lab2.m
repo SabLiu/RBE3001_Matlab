@@ -67,23 +67,44 @@ try
               0 175 358;
               0 637 -412;
               0 -30 -266];
-    
-    for k = 0:3 % do this 3 times because 3 viapoints
-        packet = zeros(15, 1, 'single');
+    % GENERATE TRAJECTORIES : to, tf, vo, vf, qo, qf
+        % coefficients for joint 2: 
+        traj = generateTraj(0, 5.15, 0, 0, -30, 175); % joint 2 from pos 1 to 2
+        dlmwrite('trajectories.csv', traj, '-append');
+        traj = generateTraj(0, 5.15, 0, 0, 175, 637); % joint 2 from pos 2 to 3
+        dlmwrite('trajectories.csv', traj, '-append');
+        traj = generateTraj(0, 5.15, 0, 0, 637, -30); % joint 2 from pos 3 to 4
+        dlmwrite('trajectories.csv', traj, '-append');
+        
+        % coefficients for joint 3: 
+        traj = generateTraj(0, 5.15, 0, 0, -266, 358); % joint 3 from pos 1 to 2
+        dlmwrite('trajectories.csv', traj, '-append');
+        traj = generateTraj(0, 5.15, 0, 0, 358, -412); % joint 3 from pos 2 to 3
+        dlmwrite('trajectories.csv', traj, '-append');
+        traj = generateTraj(0, 5.15, 0, 0, -412, -266); % joint 3 from pos 3 to 4
+        dlmwrite('trajectories.csv', traj, '-append');
+%     for k = 0:3 % do this 3 times because 3 viapoints
+%         packet = zeros(15, 1, 'single');
         
         % will need to set positions with these for viaPts
-        packet(1) = viaPts(k+1, 1); % this is for joint 0
-        packet(4) = viaPts(k+1, 2); % this is for joint 1
-        packet(7) = viaPts(k+1, 3); % this is for joint 2
+%         packet(1) = viaPts(k+1, 1); % this is for joint 0
+%         packet(4) = viaPts(k+1, 2); % this is for joint 1
+%         packet(7) = viaPts(k+1, 3); % this is for joint 2
+        
+        
+        
+        
+        
+        
         
         % set motor to those positions
-        pp.write(PID_SERV_ID, packet);
+%         pp.write(PID_SERV_ID, packet);
 
-        for x = 0:50
-            packet = zeros(15, 1, 'single');
-            pp.write(STATUS_SERV_ID, packet);
-            pause(0.003);
-            returnPacket = pp.read(STATUS_SERV_ID);
+%         for x = 0:50
+%             packet = zeros(15, 1, 'single');
+%             pp.write(STATUS_SERV_ID, packet);
+%             pause(0.003);
+%             returnPacket = pp.read(STATUS_SERV_ID);
             
             % plotting in xyz space
             %b is P3 returned from plotStickmodel (end effector position)
@@ -102,24 +123,24 @@ try
 %             dlmwrite('triangle.csv', printMatrix, '-append');
     
             % Plot X,Z of robot on a 2D graph
-            xlim([-100 200]);
-            ylim([-30 300]);
-            p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
-            plot(p(1), p(3), 'r*');
-            hold on
-            pause(0.01);
+%             xlim([-100 200]);
+%             ylim([-30 300]);
+%             p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
+%             plot(p(1), p(3), 'r*');
+%             hold on
+%             pause(0.01);
             
             
-        end
-    end    
+%         end
+%     end    
     % plot the 3 setpoints 
-    convert = (2*pi)/4095;
-    p1 = fwkin3001(0*convert, -30*convert, -266*convert);
-    plot(p1(1), p1(3), 'b*');
-    p2 = fwkin3001(0*convert, 175*convert, 358*convert);
-    plot(p2(1), p2(3), 'b*');
-    p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
-    plot(p3(1), p3(3), 'b*');
+%     convert = (2*pi)/4095;
+%     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
+%     plot(p1(1), p1(3), 'b*');
+%     p2 = fwkin3001(0*convert, 175*convert, 358*convert);
+%     plot(p2(1), p2(3), 'b*');
+%     p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
+%     plot(p3(1), p3(3), 'b*');
      
     toc
     hold off
