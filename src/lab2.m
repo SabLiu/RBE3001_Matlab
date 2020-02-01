@@ -59,28 +59,14 @@ try
     timeStep = .01;
     tic
     %% Status readings
-%         for x = 0:9
-%             % send a status request
-%             packet = zeros(15, 1, 'single');
-%             pp.write(STATUS_SERV_ID, packet);
-%             pause(timeStep);
-%             returnPacket = pp.read(STATUS_SERV_ID);
-%     
-%             printMatrix = zeros(1,4);
-%             printMatrix(1) = x*timeStep; % time stamp for readings.
-%             for i = 0:2
-%                 printMatrix(i+2) = returnPacket((i*3)+1);
-%             end
-%             dlmwrite('test.csv', printMatrix, '-append');
-%         end
     timeStep = 0.5;
     angleConversion = (2*pi)/4095;
     
     % these are positions for all 3 joints
-    viaPts = [0 -75 -270;
-              0 -25 270;
-              0 325 -280
-              0 -75 -270];
+    viaPts = [0 -30 -266; 
+              0 175 358;
+              0 637 -412;
+              0 -30 -266];
     
     for k = 0:3 % do this 3 times because 3 viapoints
         packet = zeros(15, 1, 'single');
@@ -99,46 +85,42 @@ try
             pause(0.003);
             returnPacket = pp.read(STATUS_SERV_ID);
             
+            % plotting in xyz space
             %b is P3 returned from plotStickmodel (end effector position)
 %             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
 %             %printmatrix: time theta1 theta2 theta3 x z
-%             printMatrix = zeros(1,12);%6);
+%             printMatrix = zeros(1,12);
 %             printMatrix(1) = x*.103 +(k * 50 * .103);%this gross number is the .1 timestep plus the .003 seconds to receive return packet
 %             printMatrix(2) = returnPacket(1)*360/4095;
 %             printMatrix(3) = returnPacket(4)*360/4095;
 %             printMatrix(4) = returnPacket(7)*360/4095;
 %             printMatrix(5) = b(1,1);
 %             printMatrix(6) = b(3,1);
+%             printMatrix(7) = returnPacket(1);
+%             printMatrix(8) = returnPacket(4);
+%             printMatrix(9) = returnPacket(7);
 %             dlmwrite('triangle.csv', printMatrix, '-append');
-%             
-            % need to plot xz position of the robot 
-%             plot(b(1,1), b(3,1));
     
             % Plot X,Z of robot on a 2D graph
-            xlim([-300 300]);
-            ylim([-300 300]);
+            xlim([-100 200]);
+            ylim([-30 300]);
             p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
             plot(p(1), p(3), 'r*');
             hold on
+            pause(0.01);
             
             
         end
     end    
+    % plot the 3 setpoints 
     convert = (2*pi)/4095;
-    p1 = fwkin3001(0*convert, -85*convert, -270*convert);
+    p1 = fwkin3001(0*convert, -30*convert, -266*convert);
     plot(p1(1), p1(3), 'b*');
-    p2 = fwkin3001(0*convert, -25*convert, 270*convert);
+    p2 = fwkin3001(0*convert, 175*convert, 358*convert);
     plot(p2(1), p2(3), 'b*');
-    p3 = fwkin3001( 0*convert, 325*convert, -280*convert);
+    p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
     plot(p3(1), p3(3), 'b*');
-    
-%     for x = 0:20
-%         packet = zeros(15, 1, 'single');
-%         pp.write(STATUS_SERV_ID, packet);
-%         pause(0.003);
-%         returnPacket = pp.read(STATUS_SERV_ID);
-%         plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
-%     end    
+     
     toc
     hold off
     
