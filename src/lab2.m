@@ -1,13 +1,4 @@
-%%
-% RBE3001 - Laboratory 1
-%
-% Instructions
-% ------------
-% Welcome again! This MATLAB script is your starting point for Lab
-% 1 of RBE3001. The sample code below demonstrates how to establish
-% communication between this script and the Nucleo firmware, send
-% setpoint commands and receive sensor data.
-%
+%% RBE3001 - Laboratory 2
 
 clear
 clear java
@@ -85,12 +76,13 @@ try
     timeStep = 0.5;
     angleConversion = (2*pi)/4095;
     
-    % these are 5 arbitrary positions for all 3 joints
-    viaPts = [0 -85 -270;
+    % these are positions for all 3 joints
+    viaPts = [0 -75 -270;
               0 -25 270;
-              0 325 -280];
+              0 325 -280
+              0 -75 -270];
     
-    for k = 0:4
+    for k = 0:3 % do this 3 times because 3 viapoints
         packet = zeros(15, 1, 'single');
         
         % will need to set positions with these for viaPts
@@ -106,19 +98,39 @@ try
             pp.write(STATUS_SERV_ID, packet);
             pause(0.003);
             returnPacket = pp.read(STATUS_SERV_ID);
-            b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
-            %printmatrix: time theta1 theta2 theta3 x z
-            printMatrix = zeros(1,6);
-            printMatrix(1) = x*.103 +(k * 50 * .103);%this gross number is the .1 timestep plus the .003 seconds to receive return packet
-            printMatrix(2) = returnPacket(1)*angleConversion;
-            printMatrix(3) = returnPacket(4)*angleConversion;
-            printMatrix(4) = returnPacket(7)*angleConversion;
-            printMatrix(5) = b(1,1);
-            printMatrix(6) = b(3,1);
-            dlmwrite('triangle.csv', printMatrix, '-append');
+            
+            %b is P3 returned from plotStickmodel (end effector position)
+%             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
+%             %printmatrix: time theta1 theta2 theta3 x z
+%             printMatrix = zeros(1,12);%6);
+%             printMatrix(1) = x*.103 +(k * 50 * .103);%this gross number is the .1 timestep plus the .003 seconds to receive return packet
+%             printMatrix(2) = returnPacket(1)*360/4095;
+%             printMatrix(3) = returnPacket(4)*360/4095;
+%             printMatrix(4) = returnPacket(7)*360/4095;
+%             printMatrix(5) = b(1,1);
+%             printMatrix(6) = b(3,1);
+%             dlmwrite('triangle.csv', printMatrix, '-append');
+%             
+            % need to plot xz position of the robot 
+%             plot(b(1,1), b(3,1));
+    
+            % Plot X,Z of robot on a 2D graph
+            xlim([-300 300]);
+            ylim([-300 300]);
+            p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
+            plot(p(1), p(3), 'r*');
+            hold on
+            
             
         end
     end    
+    convert = (2*pi)/4095;
+    p1 = fwkin3001(0*convert, -85*convert, -270*convert);
+    plot(p1(1), p1(3), 'b*');
+    p2 = fwkin3001(0*convert, -25*convert, 270*convert);
+    plot(p2(1), p2(3), 'b*');
+    p3 = fwkin3001( 0*convert, 325*convert, -280*convert);
+    plot(p3(1), p3(3), 'b*');
     
 %     for x = 0:20
 %         packet = zeros(15, 1, 'single');
@@ -150,7 +162,7 @@ L3 = 169.28;
 % Find transformation matrices
 T1 = tdh(-theta1, L1, 0, -pi/2);
 T2 = tdh(-theta2, 0, L2, 0);
-T3 = tdh(-theta3+(pi/2) + pi/2,0,L3,0);
+T3 = tdh(-theta3 +(pi/2) + pi/2,0,L3,0);
 % Calculate transformation matrix from 0 to 3
 T = T1*T2*T3;
 % Only return the 3x1 position matrix
@@ -178,14 +190,14 @@ T2 = T1*tdh(-q(2), 0, L2, 0);
 T3 = T2*tdh(pi/2 - q(3), 0, L3, 0);
 % Position vectors from the T matrices
 P1 = T1(1:3, 4);
-disp('P1');
-disp(P1);
+% disp('P1');
+% disp(P1);
 P2 = T2(1:3, 4);
-disp('P2');
-disp(P2);
+% disp('P2');
+% disp(P2);
 P3 = T3(1:3, 4);
-disp('P3');
-disp(P3);
+% disp('P3');
+% disp(P3);
 % Create a matrix of all the points
 allPoints = [P0 P1 P2 P3];
 % Create arrays for X,Y,Z to plot
