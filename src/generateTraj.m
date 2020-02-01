@@ -12,7 +12,6 @@ function C = generateTraj(to, tf, vo, vf, qo, qf)
     % q and v values
     qv = [qo; vo; qf; vf];
     
-    % C = qv*(T^-1)
-    % \ is recommended for solving systems of equations
-    C = qv\(T);
+    % A\b solves the system Ax = b for x
+    C = T\qv;
 end
