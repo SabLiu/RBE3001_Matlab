@@ -146,12 +146,16 @@ try
             ylim([-30 300]);
             p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
             plot(p(1), p(3), 'r*');
-            hold on
+            hold on, grid on
             pause(0.397);
+            
             
             
 %         end
     end    
+    xlabel('Tip X Position (mm)'), ylabel('Tip Z Position (mm)');
+    title('Traced Triangle With Trajectory Generation');
+    set(gca, 'fontsize',16);
     % plot the 3 setpoints 
     convert = (2*pi)/4095;
     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
