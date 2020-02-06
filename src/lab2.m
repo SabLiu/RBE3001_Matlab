@@ -58,11 +58,12 @@ try
     
     timeStep = .01;
     tic
-    timeStep = 0.5;
+    %% Status readings
     angleConversion = (2*pi)/4095;
     
     % these are positions for all 3 joints
 %     viaPts = [0 -30 -266;0 175 358;0 637 -412;0 -30 -266];
+    % ViaPts after Trajectory Generation, 0.4 s in between each 
     viaPts = [0	-30	-266;
         0	-26.4820288	-255.2916352;
         0	-16.6965504	-225.5055616;
@@ -119,7 +120,6 @@ try
         % set motor to those positions
         pp.write(PID_SERV_ID, packet);
 
-%         for x = 0:50
             packet = zeros(15, 1, 'single');
             pp.write(STATUS_SERV_ID, packet);
             pause(0.003);
@@ -127,44 +127,43 @@ try
             
             % plotting in xyz space
             %b is P3 returned from plotStickmodel (end effector position)
-%             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
+            b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
             %printmatrix: time theta1 theta2 theta3 x z
-%             printMatrix = zeros(1,12);
-%             printMatrix(1) = x*.103 +(k * 50 * .103);%this gross number is the .1 timestep plus the .003 seconds to receive return packet
-%             printMatrix(2) = returnPacket(1)*360/4095;
-%             printMatrix(3) = returnPacket(4)*360/4095;
-%             printMatrix(4) = returnPacket(7)*360/4095;
-%             printMatrix(5) = b(1,1);
-%             printMatrix(6) = b(3,1);
-%             printMatrix(7) = returnPacket(1);
-%             printMatrix(8) = returnPacket(4);
-%             printMatrix(9) = returnPacket(7);
-%             dlmwrite('triangle.csv', printMatrix, '-append');
+            printMatrix = zeros(1,12);
+            printMatrix(1) = k*0.4; % After trajectory generation, time steps bt viaPts are 0.4 s
+            % Log joint angles in degrees
+            printMatrix(2) = returnPacket(1)*360/4095;
+            printMatrix(3) = returnPacket(4)*360/4095;
+            printMatrix(4) = returnPacket(7)*360/4095;
+            % Log tip x and z position
+            printMatrix(5) = b(1,1);
+            printMatrix(6) = b(3,1);
+            % Log joint encoder values 
+            printMatrix(7) = returnPacket(1);
+            printMatrix(8) = returnPacket(4);
+            printMatrix(9) = returnPacket(7);
+            dlmwrite('triangle.csv', printMatrix, '-append');
     
             % Plot X,Z of robot on a 2D graph
-            xlim([-100 200]);
-            ylim([-30 300]);
-            p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
-            plot(p(1), p(3), 'r*');
-            hold on, grid on
-            pause(0.397);
-            
-            
-            
-%         end
+%             xlim([-100 200]);
+%             ylim([-30 300]);
+%             p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
+%             plot(p(1), p(3), 'r*');
+%             hold on
+%             pause(0.397);
     end    
     xlabel('Tip X Position (mm)'), ylabel('Tip Z Position (mm)');
     title('Traced Triangle With Trajectory Generation');
     set(gca, 'fontsize',16);
     % plot the 3 setpoints 
-    convert = (2*pi)/4095;
-    p1 = fwkin3001(0*convert, -30*convert, -266*convert);
-    plot(p1(1), p1(3), 'b*');
-    p2 = fwkin3001(0*convert, 175*convert, 358*convert);
-    plot(p2(1), p2(3), 'b*');
-    p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
-    plot(p3(1), p3(3), 'b*');
-     
+%     convert = (2*pi)/4095;
+%     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
+%     plot(p1(1), p1(3), 'b*');
+%     p2 = fwkin3001(0*convert, 175*convert, 358*convert);
+%     plot(p2(1), p2(3), 'b*');
+%     p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
+%     plot(p3(1), p3(3), 'b*');
+%      
     toc
     hold off
     
@@ -214,14 +213,8 @@ T2 = T1*tdh(-q(2), 0, L2, 0);
 T3 = T2*tdh(pi/2 - q(3), 0, L3, 0);
 % Position vectors from the T matrices
 P1 = T1(1:3, 4);
-% disp('P1');
-% disp(P1);
 P2 = T2(1:3, 4);
-% disp('P2');
-% disp(P2);
 P3 = T3(1:3, 4);
-% disp('P3');
-% disp(P3);
 % Create a matrix of all the points
 allPoints = [P0 P1 P2 P3];
 % Create arrays for X,Y,Z to plot
@@ -237,71 +230,9 @@ hold on
 robotPoints = plot3(X,Y,Z,'r.');
 grid on
 axis([0 300 -300 300 -50 300]);
-% h = triad('matrix', T1);
-%     H = get(h, 'matrix');
-%     for theta = 0:360
-%         set(h,'matrix',T1,'xrotate', deg2rad(theta), 'yrotate', deg2rad(theta), 'zrotate', deg2rad(theta));
-%         drawnow
-%     end
-%      h=   triad('matrix',T1);
+% Pause so graph is visible
 pause(0.397);
 delete(robotPoints);
 delete(robotLinks);
 B = P3;
-end
-function h = triad(varargin)
-%% Find or default parent
-idx = find( strcmpi('parent',varargin) );
-if ~isempty(idx)
-    if numel(idx) > 1
-        idx = idx(end);
-        warning(sprintf('Multiple Parents are specified, using %d.',idx));
-    end
-    mom = varargin{idx+1};
-    axs = ancestor(mom,'axes','toplevel');
-    hold(axs,'on');
-else
-    mom = gca;
-    hold(mom,'on');
-end
-%% Create triad
-h = hgtransform('Parent',mom);
-kids(1) = plot3([0,1],[0,0],[0,0],'Color',[1,0,0],'Tag','X-Axis','Parent',h);
-kids(2) = plot3([0,0],[0,1],[0,0],'Color',[0,1,0],'Tag','Y-Axis','Parent',h);
-kids(3) = plot3([0,0],[0,0],[0,1],'Color',[0,0,1],'Tag','Z-Axis','Parent',h);
-%% Update properties
-for i = 1:2:numel(varargin)
-    switch lower(varargin{i})
-        case 'linestyle'
-            set(kids,varargin{i},varargin{i+1});
-        case 'linewidth'
-            set(kids,varargin{i},varargin{i+1});
-        case 'matrix'
-            set(h,varargin{i},varargin{i+1});
-        case 'parent'
-            %do nothing, property handled earlier
-            %set(h,varargin{i},varargin{i+1});
-            %daspect([1 1 1]);
-        case 'scale'
-            s = varargin{i+1};
-            if numel(s) == 1
-                s = repmat(s,1,3);
-            end
-            if numel(s) ~= 3
-                error('The scaling factor must be a singular value or a 3-element array.');
-            end
-            for j = 1:numel(kids)
-                xdata = get(kids(j),'XData');
-                ydata = get(kids(j),'YData');
-                zdata = get(kids(j),'ZData');
-                set(kids(j),'XData',xdata*s(1),'YData',ydata*s(2),'ZData',zdata*s(3));
-            end
-        case 'tag'
-            set(h,varargin{i},varargin{i+1});
-        otherwise
-            % TODO - add check for properties in line or hgtransform, and
-            % update property accordingly.
-            warning(sprintf('Ignoring "%s," unexpected property.',varargin{i}));
-    end
-end
 end
