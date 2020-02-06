@@ -57,7 +57,7 @@ try
     pause(0.003);
     
     timeStep = .01;
-    tic
+%     tic
     %% Status readings
     angleConversion = (2*pi)/4095;
     
@@ -65,7 +65,7 @@ try
 %     viaPts = [0 -30 -266;0 175 358;0 637 -412;0 -30 -266];
         
         thetaToEncoder = 4095/(2*pi); 
-        V = ikin([100; -150; 150]);
+        V = ikin( [200; 200; 200]);
         %position 1: [200; 200; 200]
         % position 2: [100; -150; 150]
         
@@ -86,39 +86,39 @@ try
         
          
         
-        for k = 0:14 % do 15 times, total time: 3 seconds for robot to reach setpoint
-            % time step per is 0.2 s 
-            
-            packet = zeros(15, 1, 'single');
-            % Encoder positions
-            packet(1) = V(1)*thetaToEncoder;
-            packet(4) = V(2)*thetaToEncoder;
-            packet(7) = V(3)*thetaToEncoder;
-            % set motor to those positions
-            pp.write(PID_SERV_ID, packet);
-
-            packet = zeros(15, 1, 'single');
-            pp.write(STATUS_SERV_ID, packet);
-            pause(0.003); % wait for response from server
-            returnPacket = pp.read(STATUS_SERV_ID);
-            
-            % plotting in xyz space
-            %b is P3 returned from plotStickmodel (end effector position)
-            b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
-            
-            %printmatrix: time theta1 theta2 theta3 x y z
-            printMatrix = zeros(1, 7);
-            printMatrix(1) = k*0.2; % time steps are 0.2 s
-            
-            % Log joint angles in degrees
-            printMatrix(2) = returnPacket(1)*360/4095;
-            printMatrix(3) = returnPacket(4)*360/4095;
-            printMatrix(4) = returnPacket(7)*360/4095;
-            % Log tip x and z position
-            printMatrix(5) = b(1,1);
-            printMatrix(6) = b(2,1);
-            printMatrix(7) = b(3,1);
-            dlmwrite('ikin.csv', printMatrix, '-append');
+%         for k = 0:14 % do 15 times, total time: 3 seconds for robot to reach setpoint
+%             % time step per is 0.2 s 
+%             
+%             packet = zeros(15, 1, 'single');
+%             % Encoder positions
+%             packet(1) = V(1)*thetaToEncoder;
+%             packet(4) = V(2)*thetaToEncoder;
+%             packet(7) = V(3)*thetaToEncoder;
+%             % set motor to those positions
+%             pp.write(PID_SERV_ID, packet);
+% 
+%             packet = zeros(15, 1, 'single');
+%             pp.write(STATUS_SERV_ID, packet);
+%             pause(0.003); % wait for response from server
+%             returnPacket = pp.read(STATUS_SERV_ID);
+%             
+%             % plotting in xyz space
+%             %b is P3 returned from plotStickmodel (end effector position)
+%             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
+%             
+%             %printmatrix: time theta1 theta2 theta3 x y z
+%             printMatrix = zeros(1, 7);
+%             printMatrix(1) = k*0.2; % time steps are 0.2 s
+%             
+%             % Log joint angles in degrees
+%             printMatrix(2) = returnPacket(1)*360/4095;
+%             printMatrix(3) = returnPacket(4)*360/4095;
+%             printMatrix(4) = returnPacket(7)*360/4095;
+%             % Log tip x and z position
+%             printMatrix(5) = b(1,1);
+%             printMatrix(6) = b(2,1);
+%             printMatrix(7) = b(3,1);
+%             dlmwrite('ikin.csv', printMatrix, '-append');
     
 %             Plot X,Z of robot on a 2D graph
 %             xlim([-100 200]);
@@ -128,7 +128,7 @@ try
 %             hold on
 %             pause(0.397);
             
-        end
+%         end
 %     plot the 3 setpoints 
 %     convert = (2*pi)/4095;
 %     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
@@ -137,8 +137,19 @@ try
 %     plot(p2(1), p2(3), 'b*');
 %     p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
 %     plot(p3(1), p3(3), 'b*');
-     
-    toc
+    
+    packet = zeros(15, 1, 'single');
+    for x = 0:499
+        tic
+        pp.write(STATUS_SERV_ID);
+        pp.read(STATUS_SERV_ID);
+        n = toc;
+        dlmwrite('status.csv', n, '-append'); 
+    end
+    
+    
+    
+%     toc
     hold off
     
     
