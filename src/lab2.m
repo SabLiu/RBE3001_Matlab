@@ -64,85 +64,85 @@ try
     % these are positions for all 3 joints
 %     viaPts = [0 -30 -266;0 175 358;0 637 -412;0 -30 -266];
     % ViaPts after Trajectory Generation, 0.4 s in between each 
-    viaPts = [0	-30	-266;
-        0	-26.4820288	-255.2916352;
-        0	-16.6965504	-225.5055616;
-        0	-1.7962176	-180.1503104;
-        0	17.0663168	-122.7344128;
-        0	38.7384	-56.7664;
-        0	62.0673792	14.2451968;
-        0	85.9006016	86.7918464;
-        0	109.0854144	157.3650176;
-        0	130.4691648	222.4561792;
-        0	148.8992	278.5568;
-        0	163.2228672	322.1583488;
-        0	172.2875136	349.7522944;
-        0	174.9404864	357.8301056;
-        
-        0	175	358;
-        0	182.9283392	344.78624;
-        0	204.9815936	308.03136;
-        0	238.5621184	252.06496;
-        0	281.0722688	181.21664;
-        0	329.9144	99.816;
-        0	382.4908672	12.19264;
-        0	436.2040256	-77.32384;
-        0	488.4562304	-164.40384;
-        0	536.6498368	-244.71776;
-        0	578.1872	-313.936;
-        0	610.4706752	-367.72896;
-        0	630.9026176	-401.76704;
-        0	636.8853824	-411.72064;
-        
-        0	637	-412;
-        0	625.5538496	-409.4945792;
-        0	593.7155968	-402.5255936;
-        0	545.2355392	-391.9139584;
-        0	483.8639744	-378.4805888;
-        0	413.3512	-363.0464;
-        0	337.4475136	-346.4323072;
-        0	259.9032128	-329.4592256;
-        0	184.4685952	-312.9480704;
-        0	114.8939584	-297.7197568;
-        0	54.9296	-284.5952;
-        0	8.3258176	-274.3953152;
-        0	-21.1670912	-267.9410176;
-        0	-29.7988288	-266.0532224
-        ];
+%     viaPts = [0	-30	-266;
+%         0	-26.4820288	-255.2916352;
+%         0	-16.6965504	-225.5055616;
+%         0	-1.7962176	-180.1503104;
+%         0	17.0663168	-122.7344128;
+%         0	38.7384	-56.7664;
+%         0	62.0673792	14.2451968;
+%         0	85.9006016	86.7918464;
+%         0	109.0854144	157.3650176;
+%         0	130.4691648	222.4561792;
+%         0	148.8992	278.5568;
+%         0	163.2228672	322.1583488;
+%         0	172.2875136	349.7522944;
+%         0	174.9404864	357.8301056;
+%         
+%         0	175	358;
+%         0	182.9283392	344.78624;
+%         0	204.9815936	308.03136;
+%         0	238.5621184	252.06496;
+%         0	281.0722688	181.21664;
+%         0	329.9144	99.816;
+%         0	382.4908672	12.19264;
+%         0	436.2040256	-77.32384;
+%         0	488.4562304	-164.40384;
+%         0	536.6498368	-244.71776;
+%         0	578.1872	-313.936;
+%         0	610.4706752	-367.72896;
+%         0	630.9026176	-401.76704;
+%         0	636.8853824	-411.72064;
+%         
+%         0	637	-412;
+%         0	625.5538496	-409.4945792;
+%         0	593.7155968	-402.5255936;
+%         0	545.2355392	-391.9139584;
+%         0	483.8639744	-378.4805888;
+%         0	413.3512	-363.0464;
+%         0	337.4475136	-346.4323072;
+%         0	259.9032128	-329.4592256;
+%         0	184.4685952	-312.9480704;
+%         0	114.8939584	-297.7197568;
+%         0	54.9296	-284.5952;
+%         0	8.3258176	-274.3953152;
+%         0	-21.1670912	-267.9410176;
+%         0	-29.7988288	-266.0532224
+%         ];
 
-    for k = 0:41 % do this 42 times because 42 viapoints
-        packet = zeros(15, 1, 'single');
-        
-        % will need to set positions with these for viaPts
-        packet(1) = viaPts(k+1, 1); % this is for joint 0
-        packet(4) = viaPts(k+1, 2); % this is for joint 1
-        packet(7) = viaPts(k+1, 3); % this is for joint 2
-        % set motor to those positions
-        pp.write(PID_SERV_ID, packet);
-
-            packet = zeros(15, 1, 'single');
-            pp.write(STATUS_SERV_ID, packet);
-            pause(0.003);
-            returnPacket = pp.read(STATUS_SERV_ID);
-            
-            % plotting in xyz space
-            %b is P3 returned from plotStickmodel (end effector position)
-            b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
-            %printmatrix: time theta1 theta2 theta3 x z
-            printMatrix = zeros(1,12);
-            printMatrix(1) = k*0.4; % After trajectory generation, time steps bt viaPts are 0.4 s
-            % Log joint angles in degrees
-            printMatrix(2) = returnPacket(1)*360/4095;
-            printMatrix(3) = returnPacket(4)*360/4095;
-            printMatrix(4) = returnPacket(7)*360/4095;
-            % Log tip x and z position
-            printMatrix(5) = b(1,1);
-            printMatrix(6) = b(3,1);
-            % Log joint encoder values 
-            printMatrix(7) = returnPacket(1);
-            printMatrix(8) = returnPacket(4);
-            printMatrix(9) = returnPacket(7);
-            dlmwrite('triangle.csv', printMatrix, '-append');
+%     for k = 0:41 % do this 42 times because 42 viapoints
+%         packet = zeros(15, 1, 'single');
+%         
+%         % will need to set positions with these for viaPts
+%         packet(1) = viaPts(k+1, 1); % this is for joint 0
+%         packet(4) = viaPts(k+1, 2); % this is for joint 1
+%         packet(7) = viaPts(k+1, 3); % this is for joint 2
+%         % set motor to those positions
+%         pp.write(PID_SERV_ID, packet);
+% 
+%             packet = zeros(15, 1, 'single');
+%             pp.write(STATUS_SERV_ID, packet);
+%             pause(0.003);
+%             returnPacket = pp.read(STATUS_SERV_ID);
+%             
+%             % plotting in xyz space
+%             %b is P3 returned from plotStickmodel (end effector position)
+%             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
+%             %printmatrix: time theta1 theta2 theta3 x z
+%             printMatrix = zeros(1,12);
+%             printMatrix(1) = k*0.4; % After trajectory generation, time steps bt viaPts are 0.4 s
+%             % Log joint angles in degrees
+%             printMatrix(2) = returnPacket(1)*360/4095;
+%             printMatrix(3) = returnPacket(4)*360/4095;
+%             printMatrix(4) = returnPacket(7)*360/4095;
+%             % Log tip x and z position
+%             printMatrix(5) = b(1,1);
+%             printMatrix(6) = b(3,1);
+%             % Log joint encoder values 
+%             printMatrix(7) = returnPacket(1);
+%             printMatrix(8) = returnPacket(4);
+%             printMatrix(9) = returnPacket(7);
+%             dlmwrite('triangle.csv', printMatrix, '-append');
     
             % Plot X,Z of robot on a 2D graph
 %             xlim([-100 200]);
@@ -152,7 +152,7 @@ try
 %             hold on
 %             pause(0.397);
             
-    end    
+%     end    
     % plot the 3 setpoints 
 %     convert = (2*pi)/4095;
 %     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
