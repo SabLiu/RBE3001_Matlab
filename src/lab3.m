@@ -58,7 +58,7 @@ try
     
     timeStep = .01;
     tic
-%% Graph 
+%% Linear Interpolation : SOMETTHING MIGHT BE WONKY HERE!!!
     angleConversion = (2*pi)/4095;
     thetaToEncoder = 4095/(2*pi); 
     % these are task space positions for each vertex of the triangle
@@ -74,6 +74,7 @@ try
     % Combine them so the columns are points in task space again 
     p = [P0 P1 P2];
     disp(p);
+    result = zeros(1, 7); 
     for x = 1:60 % Do for each column in p
         curP = p(:,x); 
         K = ikin(curP); % returns a 3x1 matrix of theta values
@@ -88,11 +89,11 @@ try
         packet(7) = enc3; 
         pp.write(PID_SERV_ID, packet); 
         
-        printMatrix = zeros(1, 4); 
+        printMatrix = zeros(1, 7); 
         
         % each setpoint in p is set every 0.1 seconds (2.0s/20 points)
         % read status every 0.02 seconds: 0.1 s/5
-        for i = 0:4 % do 5 times 
+        for i = 0:4 % do 2(5) times 
             % Read status 
             packet = zeros(15, 1, 'single');
             pp.write(STATUS_SERV_ID, packet); 
@@ -100,6 +101,7 @@ try
             returnPacket = pp.read(STATUS_SERV_ID);
             pause(0.017); % 0.1/5 = 0.02 seconds per status reading  
             
+            % prinMatrix : 1x7 row to add to results matrix
             printMatrix(1) = (.1 * (x-1)) + 0.02*i; % time stamp
             
             % Pass in current THETAS to fwkin3001
@@ -108,72 +110,118 @@ try
             printMatrix(2) = F(1);
             printMatrix(3) = F(2);
             printMatrix(4) = F(3);
-            plot3Dpoint(F);
-            dlmwrite('3dTriangleInterpolation.csv', printMatrix, '-append');
+            
+            result= [result; printMatrix]; 
+%             plot3Dpoint(F);
+            
         end 
         
-    end 
         
-%         for k = 0:14 % do 15 times, total time: 3 seconds for robot to reach setpoint
-%             % time step per is 0.2 s 
-%             
-%             packet = zeros(15, 1, 'single');
-%             % Encoder positions
-%             packet(1) = V(1)*thetaToEncoder;
-%             packet(4) = V(2)*thetaToEncoder;
-%             packet(7) = V(3)*thetaToEncoder;
-%             % set motor to those positions
-%             pp.write(PID_SERV_ID, packet);
-% 
-%             packet = zeros(15, 1, 'single');
-%             pp.write(STATUS_SERV_ID, packet);
-%             pause(0.003); % wait for response from server
-%             returnPacket = pp.read(STATUS_SERV_ID);
-%             
-%             % plotting in xyz space
-%             %b is P3 returned from plotStickmodel (end effector position)
-%             b = plotStickModel([returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion]);
-%             
-%             %printmatrix: time theta1 theta2 theta3 x y z
-%             printMatrix = zeros(1, 7);
-%             printMatrix(1) = k*0.2; % time steps are 0.2 s
-%             
-%             % Log joint angles in degrees
-%             printMatrix(2) = returnPacket(1)*360/4095;
-%             printMatrix(3) = returnPacket(4)*360/4095;
-%             printMatrix(4) = returnPacket(7)*360/4095;
-%             % Log tip x and z position
-%             printMatrix(5) = b(1,1);
-%             printMatrix(6) = b(2,1);
-%             printMatrix(7) = b(3,1);
-%             dlmwrite('ikin.csv', printMatrix, '-append');
+    end
+    disp(result);
     
-%             Plot X,Z of robot on a 2D graph
-%             xlim([-100 200]);
-%             ylim([-30 300]);
-%             p = fwkin3001((returnPacket(1)*2*pi)/4095, (returnPacket(4)*2*pi)/4095,(returnPacket(7)*2*pi)/4095);
-%             plot(p(1), p(3), 'r*');
-%             hold on
-%             pause(0.397);
-            
-%         end
+    %% Graph Velocity
     
-%     packet = zeros(15, 1, 'single');
-%     for x = 0:4
-%         pp.write(STATUS_SERV_ID,packet);
-%         pause(0.003);
+    pos1 = result(:,2);
+    pos2 = result(:,3);
+    pos3 = result(:,4);
+    
+    grid on, hold on
+    plot(result(1:301,1), pos1, 'LineWidth', 2.5);
+    plot(result(1:301,1), pos2, 'LineWidth', 2.5);
+    plot(result(1:301,1), pos3, 'LineWidth', 2.5);
+
+    
+    % Formatting stuff
+    ylim([-150 300]);
+    xlabel('Time (s)'), ylabel('Position (mm)'); 
+    title('End Effector Position (mm) Over Time (s) with Linear Interpolation'); 
+    legend({'End Effector X Position (mm)', 'End Effector Y Position (mm)','End Effector Z Position (mm)'});
+    set(gca, 'fontsize', 16); 
+    
+    
+    
+%     %% Calculate velocity
+%     velocity1 = diff(result(:,2))./0.02;
+%     velocity2 = diff(result(:,3))./0.02;
+%     velocity3 = diff(result(:,4))./0.02;
+%     disp(size(velocity1));
+%     
+%     grid on, hold on
+%     plot(result(1:300,1), velocity1, 'LineWidth', 2.5);
+%     plot(result(1:300,1), velocity2, 'LineWidth', 2.5);
+%     plot(result(1:300,1), velocity3, 'LineWidth', 2.5);
+%     
+%     % Formatting stuff
+%     ylim([-800 800]);
+%     xlabel('Time (s)'), ylabel('Velocity (mm/s)'); 
+%     title('End Effector Velocity (mm/s) Over Time (s) with Linear Interpolation'); 
+%     legend({'End Effector X Velocity (mm/s)', 'End Effector Y Velocity (mm/s)','End Effector Z Velocity (mm/s)'});
+%     set(gca, 'fontsize', 16); 
+%     
+%     %% Calculate acceleration
+%     a1 = diff(velocity1) ./ 0.02;
+%     a2 = diff(velocity2) ./ 0.02;
+%     a3 = diff(velocity3) ./ 0.02;
+%     
+%     
+%     grid on, hold on
+%     plot(result(2:300,1), a1, 'LineWidth', 2.5);
+%     plot(result(2:300,1), a2, 'LineWidth', 2.5);
+%     plot(result(2:300,1), a3, 'LineWidth', 2.5);
+%     
+%     % Formatting stuff
+%     ylim([-50000 50000]);
+%     xlabel('Time (s)'), ylabel('Acceleration (mm/s^2 x 10^4)'); 
+%     title('End Effector Acceleration (mm/s^2) Over Time (s) with Linear Interpolation'); 
+%     legend({'End Effector X Acceleration (mm/s^2)', 'End Effector Y Acceleration (mm/s^2)','End Effector Z Acceleration (mm/s^2)'});
+%     set(gca, 'fontsize', 16); 
+        
+    
+%% Quintic Trajectory Generation 
+%     angleConversion = (2*pi)/4095;
+%     thetaToEncoder = 4095/(2*pi); 
+%     % these are task space positions for each vertex of the triangle
+%     % each column is a set of coordinates 
+%     vertices = [200 150 170 200; 
+%         200 50 -100 200;
+%         200 100 150 200];
+%     
+%     tf = 2; % each edge takes 2 seconds 
+%     % ikin returns thetas
+%     for j = 1:3 % for each edge
+%       L = ikin(vertices(:,j)); 
+%       % initial joint encoder positions
+%       qo1 = L(1)*thetaToEncoder; 
+%         qo2 = L(2)*thetaToEncoder; 
+%         qo3 = L(3)*thetaToEncoder;
 %         
-%         returnPacket = pp.read(STATUS_SERV_ID);
-%         printMatrix = zeros(1, 4); 
-%         printMatrix(1) = returnPacket(1); 
-%         printMatrix(2) = returnPacket(4); 
-%         printMatrix(3) = returnPacket(7); 
-%         
-%         dlmwrite('status.csv', printMatrix, '-append'); 
-%         pause(4); 
+%       L = ikin(vertices(:, j+1)); % for the next point
+%       qf1 = L(1)*thetaToEncoder; 
+%       qf2 = L(2)*thetaToEncoder; 
+%       qf3 = L(3)*thetaToEncoder; 
+%       
+%       a = quinticTG(0, tf, qo1, qf1, 0,0,0,0); 
+%       b = quinticTG(0, tf, qo2, qf2, 0,0,0,0); 
+%       c = quinticTG(0, tf, qo3, qf3, 0,0,0,0); 
+%       
+%       printMatrix = [a b c];
+%       dlmwrite('coefficientsQuintic.csv', printMatrix, '-append');
+%       
 %     end
+
+% for i = 0:499
+%     packet = zeros(15, 1, 'single');
+%     tic
+%     pp.write(STATUS_SERV_ID, packet);
+%     pause(0.003);
+%     pp.read(STATUS_SERV_ID);
+%     n = toc;
+%     dlmwrite('status.csv', n, '-append'); 
+
+% end
+    
     toc
-    hold off
     
     
     
