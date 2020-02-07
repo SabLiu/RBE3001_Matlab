@@ -57,34 +57,62 @@ try
     pause(0.003);
     
     timeStep = .01;
-%     tic
-    %% Status readings
+    tic
+%% Graph 
     angleConversion = (2*pi)/4095;
-    
-    % these are positions for all 3 joints
-%     viaPts = [0 -30 -266;0 175 358;0 637 -412;0 -30 -266];
+    thetaToEncoder = 4095/(2*pi); 
+    % these are task space positions for each vertex of the triangle
+    % each column is a set of coordinates 
+    vertices = [200 150 170 200; 
+        200 50 -100 200;
+        200 100 150 200];
+    % Linearly interpolate 20 points between each position 
+    P0 = transpose(linearInterpolation(transpose(vertices(:,1)),transpose(vertices(:,2))));
+    P1 = transpose(linearInterpolation(transpose(vertices(:,2)),transpose(vertices(:,3))));
+    P2 = transpose(linearInterpolation(transpose(vertices(:,3)),transpose(vertices(:,4))));
+
+    % Combine them so the columns are points in task space again 
+    p = [P0 P1 P2];
+    disp(p);
+    for x = 1:60 % Do for each column in p
+        curP = p(:,x); 
+        K = ikin(curP); % returns a 3x1 matrix of theta values
         
-        thetaToEncoder = 4095/(2*pi); 
-        V = ikin( [200; 200; 200]);
-        %position 1: [200; 200; 200]
-        % position 2: [100; -150; 150]
+        % get 3 encoder positions and write to PID server
+        enc1 = K(1)*thetaToEncoder;
+        enc2 = K(2)*thetaToEncoder; 
+        enc3 = K(3)*thetaToEncoder;
+        packet = zeros(15, 1, 'single');
+        packet(1) = enc1;
+        packet(4) = enc2; 
+        packet(7) = enc3; 
+        pp.write(PID_SERV_ID, packet); 
         
-%         FOR TROUBLESHOOTING ---------------------
-%         % encoder values
-%         printMatrix(1) = packet(1);
-%         printMatrix(2) = packet(4);
-%         printMatrix(3) = packet(7);
-%         % theta values 
-%         printMatrix(4) = V(1);
-%         printMatrix(5) = V(2);
-%         printMatrix(6) = V(3);
-%         % position values expected from fwkin
-%         F = fwkin3001(V(1), V(2), V(3)); 
-%         printMatrix(7) = F(1);
-%         printMatrix(8) = F(2);
-%         printMatrix(9) = F(3);
+        printMatrix = zeros(1, 4); 
         
-         
+        % each setpoint in p is set every 0.1 seconds (2.0s/20 points)
+        % read status every 0.02 seconds: 0.1 s/5
+        for i = 0:4 % do 5 times 
+            % Read status 
+            packet = zeros(15, 1, 'single');
+            pp.write(STATUS_SERV_ID, packet); 
+            pause(0.003); 
+            returnPacket = pp.read(STATUS_SERV_ID);
+            pause(0.017); % 0.1/5 = 0.02 seconds per status reading  
+            
+            printMatrix(1) = (.1 * (x-1)) + 0.02*i; % time stamp
+            
+            % Pass in current THETAS to fwkin3001
+            F = fwkin3001(returnPacket(1)*angleConversion, returnPacket(4)*angleConversion, returnPacket(7)*angleConversion); 
+            % these are xyz position in task space 
+            printMatrix(2) = F(1);
+            printMatrix(3) = F(2);
+            printMatrix(4) = F(3);
+            plot3Dpoint(F);
+            dlmwrite('3dTriangleInterpolation.csv', printMatrix, '-append');
+        end 
+        
+    end 
         
 %         for k = 0:14 % do 15 times, total time: 3 seconds for robot to reach setpoint
 %             % time step per is 0.2 s 
@@ -129,27 +157,22 @@ try
 %             pause(0.397);
             
 %         end
-%     plot the 3 setpoints 
-%     convert = (2*pi)/4095;
-%     p1 = fwkin3001(0*convert, -30*convert, -266*convert);
-%     plot(p1(1), p1(3), 'b*');
-%     p2 = fwkin3001(0*convert, 175*convert, 358*convert);
-%     plot(p2(1), p2(3), 'b*');
-%     p3 = fwkin3001( 0*convert, 637*convert, -412*convert);
-%     plot(p3(1), p3(3), 'b*');
     
-    packet = zeros(15, 1, 'single');
-    for x = 0:499
-        tic
-        pp.write(STATUS_SERV_ID);
-        pp.read(STATUS_SERV_ID);
-        n = toc;
-        dlmwrite('status.csv', n, '-append'); 
-    end
-    
-    
-    
-%     toc
+%     packet = zeros(15, 1, 'single');
+%     for x = 0:4
+%         pp.write(STATUS_SERV_ID,packet);
+%         pause(0.003);
+%         
+%         returnPacket = pp.read(STATUS_SERV_ID);
+%         printMatrix = zeros(1, 4); 
+%         printMatrix(1) = returnPacket(1); 
+%         printMatrix(2) = returnPacket(4); 
+%         printMatrix(3) = returnPacket(7); 
+%         
+%         dlmwrite('status.csv', printMatrix, '-append'); 
+%         pause(4); 
+%     end
+    toc
     hold off
     
     
