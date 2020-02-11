@@ -6,9 +6,6 @@ function V = ikin(p)
 px = p(1);
 py = p(2);
 pz = p(3); 
-% if the desired position is out of bounds
-%errorMsg = ' No. ';
-%error(errorMsg); 
 
 L1 = 135; 
 L2 = 175; 
@@ -23,4 +20,11 @@ theta2 = alpha + beta;
 theta3 = acos(((L2^2)+(L3^2)-(d^2))/(2*L2*L3));
 
 V = [-theta1; theta2; theta3-(pi/2)];
+
+% if the desired position is out of bounds
+% there will be complex numbers in V
+if ((imag(V(1)) ~= 0)||(imag(V(2)) ~= 0)||(imag(V(3)) ~= 0))
+    errorMsg = ' No. OUT OF BOUNDS. ';
+    error(errorMsg);
+end 
 end 
