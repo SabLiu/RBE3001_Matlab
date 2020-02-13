@@ -10,5 +10,5 @@ T3 = tdh(theta3 -(pi/2), 0, L3, pi);
 % Calculate transformation matrix from 0 to 3
 T = T1*T2*T3;
 % Only return the 3x1 position matrix
-p = T(1:3, 4);
+p = T;%(1:3, 4);
 end

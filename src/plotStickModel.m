@@ -30,8 +30,9 @@ robotPoints = plot3(X,Y,Z,'r.');
 grid on
 axis([0 300 -300 300 -50 300]);
 % Pause so graph is visible
-pause(0.197); % 0.2 - 0.003
+pause(0.6); % pause(0.094); % 0.2 - 0.003
 delete(robotPoints);
 delete(robotLinks);
 B = P3;
+% plot3Dpoint(P3);
 end
