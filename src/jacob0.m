@@ -1,4 +1,5 @@
 % takes in q: 3 thetas in 3x1 matrix
+% World Reference Frame: 0 or WRF
 function j = jacob0(q)
 q1 = q(1);
 q2 = q(2);
@@ -13,28 +14,31 @@ T0e = fwkin3001(q1,q2,q3);
 ze = T0e(1:3,3);
 pe = T0e(1:3, 4);
 
-% we need p0i, which comes from T0i
-% we need zi, which also comes from T0i
+% WRF to first joint 
+% They are in the same spot, so T is identity matrix
 T01 = [1 0 0 0;
     0 1 0 0;
     0 0 1 0;
-    0 0 0 1];%tdh(-q1, L1, 0, pi/2);
-p01 = T01(1:3, 4);
-z1 = T01(1:3, 3);
+    0 0 0 1];
+p01 = T01(1:3, 4); % this is essentially a 0 vector
+z1 = T01(1:3, 3); % this is [0;0;1] since z's are on top of each other
 
+% First joint to second joint
 T12 = tdh(q1, L1, 0, pi/2);
+% WRF to second joint
 T02 = T01*T12;
-% T02 = T12;
 p02 = T02(1:3,4);
 z2 = T02(1:3,3);
 
-
-T23 = tdh(q2 , 0, L2, 0); % fwkin3001(q1,q2,q3);
+% 2nd joint to 3rd joint
+T23 = tdh(q2 , 0, L2, 0);
+% WRF to 3rd joint
 T03 = T02*T23;
 z3 = T03(1:3, 3);
 p03 = T03(1:3, 4);
-disp(z1);
 
+% Calculate cross products for Jp
+% Plug in zi for Jo
 j = [cross(z1, pe-p01) cross(z2, (pe-p02)) cross(z3, (pe-p03));
     z1 z2 z3]; 
     
