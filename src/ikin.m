@@ -19,7 +19,7 @@ theta1 = atan2(py,px);
 theta2 = alpha + beta;
 theta3 = acos(((L2^2)+(L3^2)-(d^2))/(2*L2*L3));
 
-V = [theta1; theta2; theta3-(pi/2)];
+V = [-theta1; theta2; theta3-(pi/2)];
 
 % if the desired position is out of bounds
 % there will be complex numbers in V
