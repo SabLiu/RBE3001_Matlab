@@ -1,67 +1,199 @@
-% %% RBE3001 - Laboratory 2
-% 
-% clear
-% clear java
-% clear classes;
-% 
-% vid = hex2dec('3742');
-% pid = hex2dec('0007');
-% 
-% disp (vid);
-% disp (pid);
-% 
-% javaaddpath ../lib/SimplePacketComsJavaFat-0.6.4.jar;
-% import edu.wpi.SimplePacketComs.*;
-% import edu.wpi.SimplePacketComs.device.*;
-% import edu.wpi.SimplePacketComs.phy.*;
-% import java.util.*;
-% import org.hid4java.*;
-% version -java
-% myHIDSimplePacketComs=HIDfactory.get();
-% myHIDSimplePacketComs.setPid(pid);
-% myHIDSimplePacketComs.setVid(vid);
-% myHIDSimplePacketComs.connect();
-% 
-% % Create a PacketProcessor object to send data to the nucleo firmware
-% pp = PacketProcessor(myHIDSimplePacketComs);
-% 
-% % Static link lengths for 3001 robot
-% L1 = 135;
-% L2 = 175;
-% L3 = 169.28;
-% grid on
-% try
-%     %% Setup
-%     % Define all server IDs
-%     PID_SERV_ID = 01;
-%     PID_CONFIG_SERV_ID = 02;
-%     STATUS_SERV_ID = 10;
-%     DEBUG   = true;          % enables/disables debug prints
-%     
-%     packet = zeros(15, 1, 'single');
-%     
-%     % Set PID values
-%     % Joint 0
-%     packet(1) = 0.0015;
-%     packet(2) = 0.0000095;
-%     packet(3) = 0.000001;
-%     % Joint 1
-%     packet(4) = 0.0008;
-%     packet(5) = 0.005;
-%     % Joint 2
-%     packet(7) = 0.004;
-%     packet(8) = 0.0007;
-%     packet(9) = 0.00013;
-%     
-%     pp.write(PID_CONFIG_SERV_ID,packet);
-%     pause(0.003);
-%     
-%     timeStep = .01;
-%     tic
-%     
+%% RBE3001 - Laboratory 4
+
+clear
+clear java
+clear classes;
+
+vid = hex2dec('3742');
+pid = hex2dec('0007');
+
+disp (vid);
+disp (pid);
+
+javaaddpath ../lib/SimplePacketComsJavaFat-0.6.4.jar;
+import edu.wpi.SimplePacketComs.*;
+import edu.wpi.SimplePacketComs.device.*;
+import edu.wpi.SimplePacketComs.phy.*;
+import java.util.*;
+import org.hid4java.*;
+version -java
+myHIDSimplePacketComs=HIDfactory.get();
+myHIDSimplePacketComs.setPid(pid);
+myHIDSimplePacketComs.setVid(vid);
+myHIDSimplePacketComs.connect();
+
+% Create a PacketProcessor object to send data to the nucleo firmware
+pp = PacketProcessor(myHIDSimplePacketComs);
+
+% Static link lengths for 3001 robot
+L1 = 135;
+L2 = 175;
+L3 = 169.28;
+grid on
+try
+    %% Setup
+    % Define all server IDs
+    PID_SERV_ID = 01;
+    PID_CONFIG_SERV_ID = 02;
+    STATUS_SERV_ID = 10;
+    DEBUG   = true;          % enables/disables debug prints
+    
+    packet = zeros(15, 1, 'single');
+    
+    % Set PID values
+    % Joint 0
+    packet(1) = 0.0015;
+    packet(2) = 0.0000095;
+    packet(3) = 0.000001;
+    % Joint 1
+    packet(4) = 0.0008;
+    packet(5) = 0.005;
+    % Joint 2
+    packet(7) = 0.004;
+    packet(8) = 0.0007;
+    packet(9) = 0.00013;
+    
+    pp.write(PID_CONFIG_SERV_ID,packet);
+    pause(0.003);
+    
+    timeStep = .01;
+    tic
+    
+    
+    %% Live Plot of Task-Space Velocity Vector
+    angleConversion = (2*pi)/4095; % encoder to theta
+    radiansToEncoder = 4095/(2*pi);
+    vertices = [200 150 170 200;
+        200 50 -100 200;
+        200 100 150 200];
+    thetas = zeros(3,1);
+%     for v = 1:4
+%         packet = zeros(15, 1, 'single');
+%         curPoints = vertices(:,v); 
+%         packet(1) = curPoints(1);
+%         packet(4) = curPoints(2);
+%         packet(7) = curPoints(3); 
+%         pp.write(PID_SERV_ID,packet);
+%         pause(0.003);
+%     status = zeros(3,20); 
+%         for i = 1:10
+%             packet = zeros(15, 1, 'single');
+%             pp.write(STATUS_SERV_ID,packet);
+%             pause(0.003);
+%             returnPacket = pp.read(STATUS_SERV_ID);
+%             thetas(1) = returnPacket(1)*angleConversion;
+%             thetas(2) = returnPacket(4)*angleConversion;
+%             thetas(3) = returnPacket(7)*angleConversion;
+%             plotStickModel(thetas);
+%             status(:, i+1) = thetas; 
+%             
+%             pause(2);
+%             if (i ~= 1)
+%                 q = status(:, i);
+%                 dq = (q - status(:, i-1))./0.2;
+%                 % dp is instantaneous task space velocity
+%                 dp = fwdVel(q, dq);
+%                 endEffectorPos = fwkin3001(q(1), q(2), q(3));
+%                 
+%                 velocityVector = quiver3(endEffectorPos(1,4), endEffectorPos(2,4), endEffectorPos(3,4), dp(1), dp(2), dp(3));
+%                 plotStickModel(thetas);
+%                 delete(velocityVector);
+%             end
+%             
+%         end
+% %         pause(2);
+%     end
+    % generate traj: interpolate in task space
+    % want each edge to take 2 seconds 
+    coefficients = zeros(4,9);
+    
+    % For each edge
+    for curEdge = 1:3
+        curPoint = vertices(:,curEdge);
+        nextPoint = vertices(:, curEdge+1); 
+        % Generate coefficients for x, y, or z for that edge
+        for xyz = 1:3
+            column = (curEdge-1)*3 + xyz; 
+            % edge 1  edge 2  edge 3
+            % x y z | x y z| x y z|
+            coefficients(:, column) = generateTraj(0, 2, 0, 0, curPoint(xyz), nextPoint(xyz)); 
+        end
+    end
+    
+    %generates the task space position matrix
+    taskSpacePos = zeros(3, 60);
+    
+    %for each edge
+    for eachEdge = 1:3
+        %for each time stamp
+        %each timestamp will be 0.1 seconds (2 secconds/20 timestamps)
+        for time = 0:19
+            %for each xyz row
+            for xyz = 1:3
+                %pulls out a coeffecinet from each column
+                column = (eachEdge - 1)*3 + xyz;
+                curCoeff = coefficients(:,column);
+                %pulls out a coeffectinet from each row
+                %solves for solve cubic
+                column = (eachEdge-1)*20 + (time + 1);
+                taskSpacePos(xyz,column) = solveCubic(curCoeff, 0.1*time);
+            end
+        end
+    end
+    
+    statusThetas = zeros(3,60);
+    statusEncoders = zeros(3,60); 
+    
+    %For each Task Space Point from column 1-60
+    for points = 1:60
+        
+        %pulls out current point from Task Space Position and runs it
+        %through our inverse kinematic equations
+        curPoint = taskSpacePos(:,points);
+        thetas = ikin(curPoint);
+        %stores values into 3x1 matirx 'encoders'
+        %Multiplies each value by 'radiansToEncoder' before transfer
+        encoders = zeros(3,1);
+        for theta = 1:3
+            encoders(theta) = thetas(theta)*radiansToEncoder;
+        end
+        
+        packet = zeros(15, 1, 'single');
+        packet(1) = encoders(1);
+        packet(4) = encoders(2);
+        packet(7) = encoders(3);
+        
+        pp.write(PID_SERV_ID, packet);
+        pause(0.003);
+        packet = zeros(15, 1, 'single');
+        pp.write(STATUS_SERV_ID, packet);
+        pause(0.003); 
+        returnPacket = pp.read(STATUS_SERV_ID);
+        thetas(1) = returnPacket(1)*angleConversion;
+        thetas(2) = returnPacket(4)*angleConversion;
+        thetas(3) = returnPacket(7)*angleConversion;
+        
+        statusThetas(:, points) = thetas;
+        statusEncoders = [returnPacket(1); returnPacket(4); returnPacket(7)];
+        
+        % Calculate instantaneous velocity for x,y, and z
+        if (points ~= 1)
+            q = statusThetas(:, points); 
+            dq = (q - statusThetas(:, points-1))./0.1; 
+            % dp is instantaneous task space velocity
+            dp = fwdVel(q, dq); 
+            endEffectorPos = fwkin3001(q(1), q(2), q(3)); 
+            
+            velocityVector = quiver3(endEffectorPos(1,4), endEffectorPos(2,4), endEffectorPos(3,4), dp(1), -dp(2), dp(3)); 
+            plotStickModel(thetas);
+            delete(velocityVector);
+        end
+        
+    end
+    
+    
 %     %% Quintic Trajectory Generation
-%     angleConversion = (2*pi)/4095; % encoder to theta
-%     radiansToEncoder = 4095/(2*pi);
+% 
 %     % task space positions for each vertex of the triangle
 %     % each column is a set of coordinates
 %     vertices = [200 150 170 200;
@@ -152,87 +284,26 @@
 %     end
 %     
 %     
-%     %
-%     %% Graph Position
-%     %
-%     %     pos1 = result(:,2);
-%     %     pos2 = result(:,3);
-%     %     pos3 = result(:,4);
-%     %
-%     %     grid on, hold on
-%     %     plot(result(1:61,1), pos1, 'LineWidth', 2.5);
-%     %     plot(result(1:61,1), pos2, 'LineWidth', 2.5);
-%     %     plot(result(1:61,1), pos3, 'LineWidth', 2.5);
-%     %
-%     %
-%     %     % Formatting stuff
-%     %     ylim([-150 300]);
-%     %     xlabel('Time (s)'), ylabel('Position (mm)');
-%     %     title('End Effector Position (mm) Over Time (s) with Quintic Polynomial Trajectory Generation');
-%     %     legend({'End Effector X Position (mm)', 'End Effector Y Position (mm)','End Effector Z Position (mm)'});
-%     %     set(gca, 'fontsize', 16);
-%     
-%     
-%     
-%     %% Calculate velocity
-%     %     velocity1 = diff(result(:,2))./0.1;
-%     %     velocity2 = diff(result(:,3))./0.1;
-%     %     velocity3 = diff(result(:,4))./0.1;
-%     %     disp(size(velocity1));
-%     %
-%     %     grid on, hold on
-%     %     plot(result(1:60,1), velocity1, 'LineWidth', 2.5);
-%     %     plot(result(1:60,1), velocity2, 'LineWidth', 2.5);
-%     %     plot(result(1:60,1), velocity3, 'LineWidth', 2.5);
-%     %
-%     %     % Formatting stuff
-%     %     ylim([-800 800]);
-%     %     xlabel('Time (s)'), ylabel('Velocity (mm/s)');
-%     %     title('End Effector Velocity (mm/s) Over Time (s) with Quintic Polynomial Trajectory Generation');
-%     %     legend({'End Effector X Velocity (mm/s)', 'End Effector Y Velocity (mm/s)','End Effector Z Velocity (mm/s)'});
-%     %     set(gca, 'fontsize', 16);
-%     %
-%     %% Calculate acceleration
-%     %     a1 = diff(velocity1) ./ 0.1;
-%     %     a2 = diff(velocity2) ./ 0.1;
-%     %     a3 = diff(velocity3) ./ 0.1;
-%     %
-%     %
-%     %     grid on, hold on
-%     %     plot(result(2:60,1), a1, 'LineWidth', 2.5);
-%     %     plot(result(2:60,1), a2, 'LineWidth', 2.5);
-%     %     plot(result(2:60,1), a3, 'LineWidth', 2.5);
-%     %
-%     %     % Formatting stuff
-%     %     ylim([-50000 50000]);
-%     %     xlabel('Time (s)'), ylabel('Acceleration (mm/s^2 x 10^4)');
-%     %     title('End Effector Acceleration (mm/s^2) Over Time (s) with Quintic Polynomial Trajectory Generation');
-%     %     legend({'End Effector X Acceleration (mm/s^2)', 'End Effector Y Acceleration (mm/s^2)','End Effector Z Acceleration (mm/s^2)'});
-%     %     set(gca, 'fontsize', 16);
-%     
-%     
-%     
-%     toc
-%     
-%     
-%     
-% catch exception
-%     getReport(exception)
-%     disp('Exited on error, clean shutdown');
-% end
-% 
-% % Clear up memory upon termination
-% pp.shutdown()
-% 
-% toc
+    
+    toc
+    
+    
+    
+catch exception
+    getReport(exception)
+    disp('Exited on error, clean shutdown');
+end
+
+% Clear up memory upon termination
+pp.shutdown()
+
+toc
 
 % run fwkin with three target thetas
 % fwkin returns the p matrix 0 to i 
 % pass the p matrices into jacobian
 
-
-
-q = [0; pi/2; pi/2];
-j = jacob0(q);
-disp(j);
-disp(det(j(1:3, 1:3)));
+% q = [0; pi/2; pi/2];
+% j = jacob0(q);
+% disp(j);
+% disp(det(j(1:3, 1:3)));
