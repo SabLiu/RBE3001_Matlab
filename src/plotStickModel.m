@@ -28,7 +28,7 @@ hold on
 % Plot joint points
 robotPoints = plot3(X,Y,Z,'r.');
 grid on
-axis([0 300 -300 300 -50 300]);
+axis([-400 600 -400 600 -400 600]);
 % Pause so graph is visible
 pause(0.6); % pause(0.094); % 0.2 - 0.003
 delete(robotPoints);
