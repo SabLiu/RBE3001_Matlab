@@ -24,7 +24,7 @@ p01 = T01(1:3, 4); % this is essentially a 0 vector
 z1 = T01(1:3, 3); % this is [0;0;1] since z's are on top of each other
 
 % First joint to second joint
-T12 = tdh(q1, L1, 0, pi/2);
+T12 = tdh(-q1, L1, 0, pi/2);
 % WRF to second joint
 T02 = T01*T12;
 p02 = T02(1:3,4);
