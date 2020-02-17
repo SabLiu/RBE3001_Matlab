@@ -1,4 +1,4 @@
-
+% q is 3x1 joint angle thetas
 
 function X = plot2DStickModel(q)
 clf
