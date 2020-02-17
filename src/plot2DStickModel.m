@@ -1,5 +1,7 @@
-% q : 3x1 with joint angles (thetas)
-function B = plotStickModel(q)
+% q is 3x1 joint angle thetas
+
+function X = plot2DStickModel(q)
+clf
 % Static link lengths for 3001 robot
 L1 = 135;
 L2 = 175;
@@ -23,16 +25,14 @@ Z = allPoints(3,:);
 
 % Create 3D plot
 % Plot links
-robotLinks = plot3(X,Y,Z);
+robotLinks = plot(X,Z);
 hold on
 % Plot joint points
-robotPoints = plot3(X,Y,Z,'r.');
+robotPoints = plot(X,Z,'r.');
 grid on
-axis([-400 600 -400 600 -400 600]);
-% Pause so graph is visible
-pause(0.6); % pause(0.094); % 0.2 - 0.003
-delete(robotPoints);
-delete(robotLinks);
+% don't need to delete the robot
+xlim([-100 500]); 
+ylim([-100 500]); 
 B = P3;
-% plot3Dpoint(P3);
-end
+
+end 
