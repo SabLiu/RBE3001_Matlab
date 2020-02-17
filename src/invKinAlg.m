@@ -1,7 +1,7 @@
 
 % pe is desired position (3x1)
 
-function jointAngles = invKinAlg(pe)
+function jointAngles = invKinAlg()%pe)
 %% Setup
     encoderToRadians = (2*pi)/4095; % encoder to theta
     radiansToEncoder = 4095/(2*pi);
@@ -13,7 +13,12 @@ function jointAngles = invKinAlg(pe)
     disp(targetPoint);
     
     pd = [targetPoint(1); 0; targetPoint(2)]; 
-    plot2DStickModel(ikin(pd)); 
+    jointAngleTargets = ikin(pd); 
+    plot2DStickModel(jointAngleTargets); 
+    
+    fwkin = fwkin3001(0, jointAngleTargets(2), jointAngleTargets(3));
+    
+    disp(fwkin(1:3, 4));
     
     %% Move to target
 %     q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians]; 
