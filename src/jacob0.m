@@ -41,6 +41,7 @@ p03 = T03(1:3, 4);
 % Plug in zi for Jo
 j = [cross(z1, pe-p01) cross(z2, (pe-p02)) cross(z3, (pe-p03));
     z1 z2 z3]; 
+disp(j);
     
 % j = [-L3*sin(q1)*cos(q2)*sin(q3)-L3*sin(q1)*sin(q2)*cos(q3) -L3*cos(q1)*sin(q2)*sin(q3)+L3*cos(q1)*cos(q2)*cos(q3) L3*cos(q1)*cos(q2)*cos(q3)-L3*cos(q1)*sin(q2)*sin(q3);
 %      L3*cos(q1)*cos(q2)*sin(q3)+L3*cos(q1)*sin(q2)*cos(q3) -L3*sin(q1)*sin(q2)*sin(q3)+L3*sin(q1)*cos(q2)*cos(q3) L3*sin(q1)*cos(q2)*cos(q3)-L3*sin(q1)*sin(q2)*sin(q3);
