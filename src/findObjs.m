@@ -2,11 +2,6 @@ function [imDetectedDisk, robotFramePose, diskDia] = findObjs(imOrig, T_checker_
 % FINDOBJS implements a sequence of image processing steps to detect
 % any objects of interest that may be present in an RGB image.
 %
-% Note: this function contains several un-implemented sections - it only
-% provides a skeleton that you can use as reference in the development of
-% your image processing pipeline. Feel free to edit as needed (or, feel
-% free to toss it away and implement your own function).
-%
 %   Usage
 %   -----
 %   [IMDETECTEDOBJS, ROBOTFRAMEPOSE] = findObjs(IMORIG, TCHECKER2ROBOT, TCAM2CHECKER, CAMERAPARAMS)
@@ -26,40 +21,81 @@ function [imDetectedDisk, robotFramePose, diskDia] = findObjs(imOrig, T_checker_
 %   CAMERAPARAMS - an object containing the camera's intrinsic and
 %   extrinsic parameters, as returned by MATLAB's camera calibration app.
 %
-%   Outputs
-%   -------
-%   Ideally, this function should return:
+%%   Outputs
 %   IMDETECTEDOBJS - a binarized image showing the location of the
 %   segmented objects of interest.
 %   
 %   ROBOTFRAMEPOSE - the coordinates of the objects expressed in the robot's
 %   reference frame
-%
-%   Authors
-%   -------
-%   Nathaniel Dennler  <nsdennler@wpi.edu>
-%   Sean O'Neil        <stoneil@wpi.edu> 
-%   Loris Fichera      <lfichera@wpi.edu>
-%
-%   Latest Revision
-%   ---------------
-%   2/12/2019
-
-
-%%  1. First things first - undistort the image using the camera parameters
-[im, ~] = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
-
-%%  2. Segment the image to find the objects of interest.
-
-%  [Your image processing code goes here]
-
-% You can easily convert image pixel coordinates to 3D coordinates (expressed in the
-% checkerboard reference frame) using the following transformations:
-
-R = T_cam_to_checker(1:3,1:3);
-t = T_cam_to_checker(1:3,4);
-% worldPoints = pointsToWorld(cameraParams, R, t, YOUR_PIXEL_VALUES);
-
 % see https://www.mathworks.com/help/vision/ref/cameraparameters.pointstoworld.html
 % for details on the expected dimensions for YOUR_PIXEL_VALUES)
+
+
+%%  Undistort the image using the camera parameters
+% [im, ~] = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
+img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
+
+%% THIS WORKS DO NOT TOUCH. STEP 5
+%% Put circles on the balls, find their location wrt checkerboard
+% % segmentation: isolate balls
+% BWimg = createMaskBalls(img); % outputs binarized image
+% % centers: xy pixel coordinates 
+% [centers,radii] = imfindcircles(BWimg,[20 55], ...
+%     'Sensitivity',0.87);
+% imshow(BWimg); 
+% hold on
+% % draw circles with centers
+% h = viscircles(centers, radii); 
+% worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), centers);
+% plot(centers(:,1), centers(:,2),'b*');
+
+
+%% does not work :'(
+%%  Find the colors of the balls
+% BWimgSize = createMaskSize(img); % outputs binarized image
+% % centers: xy pixel coordinates 
+% [centers,radii] = imfindcircles(BWimgSize,[50 100], ...
+%     'Sensitivity',0.87);
+% imshow(BWimgSize); 
+% hold on
+% h = viscircles(centers, radii);
+
+%% Find the size
+h = fspecial('average'); 
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);
+img = imfilter(img, h);imshow(img); 
+BWimgSize = createMaskSize(img);
+[centers,radii] = imfindcircles(BWimgSize,[50 150], ...
+    'Sensitivity',0.9);
+BWimgSize = edge(BWimgSize, 'approxcanny');
+fill = imfill(BWimgSize, 'holes'); 
+
+imshow(BWimgSize); 
+hold on; 
+imshow(fill);
+h = viscircles(centers,radii); 
+
+
+% BWimg = createMaskBalls(img); % outputs binarized image
+% % centers: xy pixel coordinates 
+
+% imshow(BWimg); 
+% hold on
+% h = viscircles(centers, radii); 
+% worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), centers);
+% plot(centers(:,1), centers(:,2),'b*');
+
+
+
 end
