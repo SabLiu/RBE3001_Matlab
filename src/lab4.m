@@ -58,45 +58,7 @@ try
     
     timeStep = .01;
     tic
-    
-    
-%     %% Live Plot of Task-Space Velocity Vector
-%     angleConversion = (2*pi)/4095; % encoder to theta
-% 
-% %% Run algorithm to move robot to pd
-% % while the robot is still 50 mm away from its desired position
-% while (deltaQ(1) > 0.05 || deltaQ(2) > 0.05 || deltaQ(3) > 0.05)
-%     disp('Looping');
-%     disp(deltaQ); 
-%     % Read qi (current position)
-%     packet = zeros(15, 1, 'single');
-%     pp.write(STATUS_SERV_ID, packet);
-%     pause(0.003);
-%     returnPacket = pp.read(STATUS_SERV_ID);
-%     
-%     q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians];
-%     
-%     plot2DStickModel(q); 
-%     fwkin = fwkin3001(q(1), q(2), q(3));
-%     p = fwkin(1:3, 4); 
-%     % Calculate delta Q
-%     jacobian = jacob0(q);
-%     invJacobian = inv(jacobian(1:3, 1:3));
-%     
-%     
-% 
-%     
-%     deltaQ = qd - q; %invJacobian*(pd - p);
-%     
-% end 
-%     
-%     % Send motors to qi = qi + deltaQ
-%     packet = zeros(15, 1, 'single');
-%     packet(1) = returnPacket(1) + deltaQ(1)*radiansToEncoder;
-%     packet(4) = returnPacket(4) + deltaQ(2)*radiansToEncoder;
-%     packet(7) = returnPacket(7) + deltaQ(3)*radiansToEncoder;
-%     pp.write(PID_SERV_ID, packet);
-%     pause(0.097);
+ 
 %     radiansToEncoder = 4095/(2*pi);
 %     % These points send the robot to a singularity. 
 %     vertices = [200 L2+L3 200 100;
@@ -113,7 +75,7 @@ try
 %     coefficients = zeros(4,9);
 %     
 %     % For each edge
-%     for curEdge = 1:3
+%     for curEdge = 1:4
 %         curPoint = vertices(:,curEdge);
 %         nextPoint = vertices(:, curEdge+1); 
 %         % Generate coefficients for x, y, or z for that edge
@@ -214,44 +176,44 @@ try
 
 %% EXTRA CREDIT
 for i = 0:2
-packet = zeros(15, 1, 'single');
-pp.write(STATUS_SERV_ID, packet);
-pause(0.003);
-returnPacket = pp.read(STATUS_SERV_ID);
-
-encoderToRadians = (2*pi)/4095; % encoder to theta
-radiansToEncoder = 4095/(2*pi);
-
-%% Determine current position
-q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians];
-fwkin = fwkin3001(returnPacket(1)*encoderToRadians, returnPacket(2)*encoderToRadians, returnPacket(7)*encoderToRadians);
-p0 = fwkin(1:3, 4); 
-plot2DStickModel(q);
-
-%% Determine target point
-% User manually selects target point on graph
-targetPoint = ginput(1);
-disp(targetPoint);
-
-pd = [targetPoint(1); 0; targetPoint(2)];
-solution = invKinAlg(q, pd); 
-    disp(solution);
-
     packet = zeros(15, 1, 'single');
-    packet(1) = solution(1)*radiansToEncoder; 
+    pp.write(STATUS_SERV_ID, packet);
+    pause(0.003);
+    returnPacket = pp.read(STATUS_SERV_ID);
+    
+    encoderToRadians = (2*pi)/4095; % encoder to theta
+    radiansToEncoder = 4095/(2*pi);
+    
+    %% Determine current position
+    q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians];
+    fwkin = fwkin3001(returnPacket(1)*encoderToRadians, returnPacket(2)*encoderToRadians, returnPacket(7)*encoderToRadians);
+    p0 = fwkin(1:3, 4);
+    plot2DStickModel(q);
+    
+    %% Determine target point
+    % User manually selects target point on graph
+    targetPoint = ginput(1);
+    disp(targetPoint);
+    
+    pd = [targetPoint(1); 0; targetPoint(2)];
+    solution = invKinAlg(q, pd);
+    disp(solution);
+    
+    packet = zeros(15, 1, 'single');
+    packet(1) = solution(1)*radiansToEncoder;
     packet(4) = solution(2)*radiansToEncoder;
     packet(7) = solution(3)*radiansToEncoder;
     pp.write(PID_SERV_ID, packet);
     
-disp(packet);    
+    disp(packet);
     for i = 0:20
         packet = zeros(15, 1, 'single');
         pp.write(STATUS_SERV_ID, packet);
-        pause(0.003); 
-        returnPacket = pp.read(STATUS_SERV_ID); 
-        q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians]; 
-        plot2DStickModel(q); 
-        pause(0.1); 
+        pause(0.003);
+        returnPacket = pp.read(STATUS_SERV_ID);
+        q = [returnPacket(1)*encoderToRadians; returnPacket(4)*encoderToRadians; returnPacket(7)*encoderToRadians];
+        plot2DStickModel(q);
+        pause(0.1);
     end
 end
 catch exception
