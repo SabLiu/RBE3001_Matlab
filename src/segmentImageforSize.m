@@ -8,20 +8,20 @@ function [BW,maskedImage] = segmentImageforSize(X)
 %----------------------------------------------------
 
 
-% Threshold image - manual threshold
-BW = X > 104;
+% Threshold image - global threshold
+BW = imbinarize(X);
 
 % Polygon drawing
-xPos = [43.7536 116.4809 486.2416 584.2321 636.2895 639.3517 2.4139 4.7105];
-yPos = [465.5718 146.3373 135.6196 460.2129 479.3517 6.2416 3.9450 474.7584];
+xPos = [39.3900 116.7424 494.2225 587.0455 643.5128 642.7392 3.0343 2.2608];
+yPos = [482.0191 139.3477 136.2536 465.7751 485.1132 0.8868 2.4338 481.2456];
 m = size(BW, 1);
 n = size(BW, 2);
 addedRegion = poly2mask(xPos, yPos, m, n);
 BW = BW | addedRegion;
 
 % Polygon drawing
-xPos = [10.0694 33.8014 582.7010 631.6962];
-yPos = [477.0550 470.1651 460.9785 479.3517];
+xPos = [40.9370 585.4984 637.3246 38.6164];
+yPos = [472.7368 464.2281 485.1132 482.7927];
 m = size(BW, 1);
 n = size(BW, 2);
 addedRegion = poly2mask(xPos, yPos, m, n);
@@ -29,9 +29,6 @@ BW = BW | addedRegion;
 
 % Invert mask
 BW = imcomplement(BW);
-
-% Fill holes
-BW = imfill(BW, 'holes');
 
 % Create masked image.
 maskedImage = X;
