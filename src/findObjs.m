@@ -34,24 +34,53 @@ function [imDetectedDisk, robotFramePose, diskDia] = findObjs(imOrig, T_checker_
 %%  Undistort the image using the camera parameters
 % [im, ~] = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
 img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
+RGB = imread('InputImage.png'); 
 
-%% THIS WORKS DO NOT TOUCH. STEP 5
-%% Put circles on the balls, find their location wrt checkerboard
-% % segmentation: isolate balls
-% BWimg = createMaskBalls(img); % outputs binarized image
-% % centers: xy pixel coordinates 
-% [centers,radii] = imfindcircles(BWimg,[20 55], ...
-%     'Sensitivity',0.87);
-% imshow(BWimg); 
-% hold on
-% % draw circles with centers
-% h = viscircles(centers, radii); 
+%% THIS WORKS, DO NOT TOUCH. STEP 5&6A
+%%  Find the colors and locations of the balls
+blueImg = createMaskBlue(img); 
+[Bcenters, Bradii] = imfindcircles(blueImg, [20 55], ... 
+    'Sensitivity', 0.87);
+greenImg = createMaskGreen(img); 
+[Gcenters, Gradii] = imfindcircles(greenImg, [20 55], ... 
+    'Sensitivity', 0.87);
+yellowImg = createMaskYellow(img); 
+[Ycenters, Yradii] = imfindcircles(yellowImg, [20 55], ... 
+    'Sensitivity', 0.87);
+
+
+imshow('InputImage.png'); 
+hold on
+blueCircles = viscircles(Bcenters, Bradii, 'Color', 'c'); 
+greenCircles = viscircles(Gcenters, Gradii, 'Color', 'g'); 
+yellowCircles = viscircles(Ycenters, Yradii, 'Color', 'y'); 
+% use this to figure out location of the balls
 % worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), centers);
-% plot(centers(:,1), centers(:,2),'b*');
+plot(Bcenters(:,1), Bcenters(:,2),'b*');
+plot(Gcenters(:,1), Gcenters(:,2),'g*');
+plot(Ycenters(:,1), Ycenters(:,2),'y*');
 
 
-%% does not work :'(
-%%  Find the colors of the balls
+%% Find sizes
+GrayImg = rgb2gray(RGB);
+imwrite(GrayImg, 'Gray.png');
+
+sizeMask = segmentImageforSize(GrayImg); 
+imwrite(sizeMask, 'forSize.png'); 
+% imshow('forSize.png'); 
+hold on 
+[Scenters, Sradii] = imfindcircles(sizeMask, [30 60],'ObjectPolarity','bright', ... 
+    'Sensitivity', 0.89,'EdgeThreshold',0.05);
+sizeCircles = viscircles(Scenters, Sradii, 'Color', 'r'); 
+plot(Scenters(:,1), Scenters(:,2),'r*');
+% how many circles we have 
+n = length(Scenters);
+areas = zeros(1, n); 
+for a = 1:n
+    areas(a) = Sradii(a)*Sradii(a)*pi; 
+end
+disp(areas); 
+
 % BWimgSize = createMaskSize(img); % outputs binarized image
 % % centers: xy pixel coordinates 
 % [centers,radii] = imfindcircles(BWimgSize,[50 100], ...
@@ -61,40 +90,30 @@ img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
 % h = viscircles(centers, radii);
 
 %% Find the size
-h = fspecial('average'); 
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);
-img = imfilter(img, h);imshow(img); 
-BWimgSize = createMaskSize(img);
-[centers,radii] = imfindcircles(BWimgSize,[50 150], ...
-    'Sensitivity',0.9);
-BWimgSize = edge(BWimgSize, 'approxcanny');
-fill = imfill(BWimgSize, 'holes'); 
-
-imshow(BWimgSize); 
-hold on; 
-imshow(fill);
-h = viscircles(centers,radii); 
-
-
-% BWimg = createMaskBalls(img); % outputs binarized image
-% % centers: xy pixel coordinates 
-
-% imshow(BWimg); 
-% hold on
-% h = viscircles(centers, radii); 
-% worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), centers);
-% plot(centers(:,1), centers(:,2),'b*');
+% h = fspecial('average'); 
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);
+% img = imfilter(img, h);imshow(img); 
+% BWimgSize = createMaskSize(img);
+% [centers,radii] = imfindcircles(BWimgSize,[50 150], ...
+%     'Sensitivity',0.9);
+% BWimgSize = edge(BWimgSize, 'approxcanny');
+% fill = imfill(BWimgSize, 'holes'); 
+% 
+% imshow(BWimgSize); 
+% hold on; 
+% imshow(fill);
+% h = viscircles(centers,radii); 
 
 
 
