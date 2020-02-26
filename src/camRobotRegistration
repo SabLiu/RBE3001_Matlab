@@ -1,0 +1,6 @@
+% this is ROBOT-CAMERA registration (step 3)
+%% Setup
+serverParams = initialize(); 
+PID_SERVER = serverParams(1); 
+STATUS_SERVER = serverParams(2); 
+

@@ -43,7 +43,10 @@ try
     % Set PID values
     % Joint 0
     packet(1) = 0.0015;
-    packet(2) = 0.0000095;
+    packet(2) = 0.0000095;packet = zeros(15, 1, 'single');
+%         pp.write(STATUS_SERV_ID, packet);
+%         pause(0.003); 
+%         returnPacket = pp.read(STATUS_SERV_ID);
     packet(3) = 0.000001;
     % Joint 1
     packet(4) = 0.0008;

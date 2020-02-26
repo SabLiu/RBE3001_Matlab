@@ -1,6 +1,5 @@
 
-
-function serverParams = initialize()
+function [PID_SERV_ID STATUS_SERV_ID GRIPPER_SERV] = initialize()
 
 clear
 % clear java
@@ -34,8 +33,9 @@ grid on
     PID_SERV_ID = 01;
     PID_CONFIG_SERV_ID = 02;
     STATUS_SERV_ID = 10;
+    GRIPPER_SERV = 55; 
     
-    serverParams = [PID_SERV_ID STATUS_SERV_ID]; 
+    serverParams = [PID_SERV_ID STATUS_SERV_ID GRIPPER_SERV]; 
     
     packet = zeros(15, 1, 'single');
     
@@ -54,6 +54,11 @@ grid on
     
     pp.write(PID_CONFIG_SERV_ID,packet);
     pause(0.003);
+%     
+%     packet = zeros(15, 1, 'single');
+%     packet(1) = 1; 
+%     pp.write(GRIPPER_SERV, packet); 
+%     pause(.003);
     
 
 end

@@ -1,11 +1,10 @@
+function camRobotRegistration()
+
 % ROBOT-CAMERA registration (step 3)
 %% Setup
-% run(CameraParams.m); 
-serverParams = initialize(); 
-PID_SERVER = serverParams(1); 
-STATUS_SERVER = serverParams(2); 
 clear('cam');
 cam = webcam(); 
+load camParams.mat; 
 L1 = 135;
 L2 = 175;
 L3 = 169.28;
@@ -15,6 +14,7 @@ T02 = T01*tdh(0, L2+52.8+48, 101.6+12, 0);
 T03 = T02*tdh(0,0,0,pi/2); 
 T04 = T03*tdh(-pi/2, 0,0,0); 
 T0_check = T04; 
+assignin('base', 'T0_check', T0_check); 
 T_check_to_robot = inv(T0_check);
 
 T_cam_to_checker = getCamToCheckerboard(cam, cameraParams); 
@@ -37,7 +37,8 @@ TworldPoints = transpose(worldPoints);
 roboPoints = T0_check * [TworldPoints; 15 15 15 15; 1 1 1 1];
 disp(roboPoints);
 
-% origImg = snapshot(cam);
+% origImg = )
+%(279.5,-139) - snapshot(cam);
 % img = undistortImage(origImg, cameraParams, 'OutputView', 'full');
 % image(origImg)
 % 
@@ -49,4 +50,6 @@ disp(roboPoints);
 %(279.5,-139) - (0, -249)
 %(70.5,-139) - (209, -242)
 %(70.5,139) - (209, 36)
+assignin('base','T_cam_to_checker', T_cam_to_checker);
 
+end
