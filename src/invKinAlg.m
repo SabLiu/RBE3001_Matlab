@@ -9,7 +9,7 @@ error = pd - errorFK(1:3, 4);
 
 qi = q0; 
 count = 0;
-while (norm(error) > 1)
+while (norm(error) > 0.1)
     fw = fwkin3001(qi(1), qi(2), qi(3));
     fq0 = fw(1:3, 4);
     error = pd-fq0;

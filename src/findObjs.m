@@ -1,65 +1,117 @@
-function [imDetectedDisk, robotFramePose, diskDia] = findObjs(imOrig, T_checker_to_robot, T_cam_to_checker, cameraParams)
-% FINDOBJS implements a sequence of image processing steps to detect
-% any objects of interest that may be present in an RGB image.
-%
-% Note: this function contains several un-implemented sections - it only
-% provides a skeleton that you can use as reference in the development of
-% your image processing pipeline. Feel free to edit as needed (or, feel
-% free to toss it away and implement your own function).
-%
-%   Usage
-%   -----
-%   [IMDETECTEDOBJS, ROBOTFRAMEPOSE] = findObjs(IMORIG, TCHECKER2ROBOT, TCAM2CHECKER, CAMERAPARAMS)
-%
-%   Inputs
-%   ------
-%   IMORIG - an RGB image showing the robot's workspace (capture from a CAM
-%   object).
-%
-%   TCHECKER2ROBOT - the homogeneous transformation matrix between the
-%   checkered board and the reference frame at the base of the robot.
-%
-%   TCAM2CHECKER - the homogeneous transformation matrix between the camera
-%   reference frame and the checkered board (you can calculate this using
-%   the GETCAMTOCHECKERBOARD function, provided separately).
-%
-%   CAMERAPARAMS - an object containing the camera's intrinsic and
-%   extrinsic parameters, as returned by MATLAB's camera calibration app.
-%
-%   Outputs
-%   -------
-%   Ideally, this function should return:
-%   IMDETECTEDOBJS - a binarized image showing the location of the
-%   segmented objects of interest.
-%   
-%   ROBOTFRAMEPOSE - the coordinates of the objects expressed in the robot's
-%   reference frame
-%
-%   Authors
-%   -------
-%   Nathaniel Dennler  <nsdennler@wpi.edu>
-%   Sean O'Neil        <stoneil@wpi.edu> 
-%   Loris Fichera      <lfichera@wpi.edu>
-%
-%   Latest Revision
-%   ---------------
-%   2/12/2019
+function [colors, locations, sizes] = findObjs()
+%%   Outputs
+%   COLORS found
+%   LOCATIONS of balls
+%   SIZES of each base (0 is small, 1 is large)
+
+%% Capture & Undistort the image
+cam = webcam();
+imOrig = snapshot(cam);
+load camParams.mat;
+load 'TcamCheck.mat';
+load 'T0check.mat';
+img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
+imwrite(img, 'InputImage.png');
+
+blues = 0;
+yellows = 0;
+greens = 0;
+
+%%  Find the colors and locations of the balls
+% 3 separate masks, one for each color
+% 1. mask image, blocking out all colors but one
+% 2. find circles
+% 3. if found circles of that color, plot on graph
+blueImg = createMaskBlue(img);
+[Bcenters, Bradii] = imfindcircles(blueImg, [18 55], ...
+    'Sensitivity', 0.85);
+hold on
+if (size(Bcenters)>0)
+    blueCircles = viscircles(Bcenters, Bradii, 'Color', 'c');
+    plot(Bcenters(:,1), Bcenters(:,2),'b*');
+    [blues, m] = size(Bcenters);
+end
+
+greenImg = createMaskGreen(img);
+[Gcenters, Gradii] = imfindcircles(greenImg, [15 55], ...
+    'Sensitivity', 0.855);
+if (size(Gcenters)>0)
+    greenCircles = viscircles(Gcenters, Gradii, 'Color', 'g');
+    plot(Gcenters(:,1), Gcenters(:,2),'g*');
+    [greens, m] = size(Gcenters);
+end
+
+yellowImg = createMaskYellow(img);
+[Ycenters, Yradii] = imfindcircles(yellowImg, [15 55], ...
+    'Sensitivity', 0.855);
+if (size(Ycenters)>0)
+    yellowCircles = viscircles(Ycenters, Yradii, 'Color', 'y');
+    plot(Ycenters(:,1), Ycenters(:,2),'y*');
+    [yellows,m] = size(Ycenters);
+end
+allCenters = [Bcenters; Gcenters; Ycenters];
 
 
-%%  1. First things first - undistort the image using the camera parameters
-[im, ~] = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
+imshow('InputImage.png');
+hold on
 
-%%  2. Segment the image to find the objects of interest.
-
-%  [Your image processing code goes here]
-
-% You can easily convert image pixel coordinates to 3D coordinates (expressed in the
-% checkerboard reference frame) using the following transformations:
-
-R = T_cam_to_checker(1:3,1:3);
-t = T_cam_to_checker(1:3,4);
-% worldPoints = pointsToWorld(cameraParams, R, t, YOUR_PIXEL_VALUES);
-
-% see https://www.mathworks.com/help/vision/ref/cameraparameters.pointstoworld.html
-% for details on the expected dimensions for YOUR_PIXEL_VALUES)
+if ((length(Bradii)==0) && (length(Gradii) == 0)&& (length(Yradii) ==0))
+    colors(1) = 5;
+    locations = [0 0];
+    sizes(1) = 5;
+else
+    % figure out location of the balls in checkerboard reference frame
+    worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), allCenters);
+    locations = worldPoints;
+    
+    %% Find sizes
+    GrayImg = rgb2gray(img);
+    imwrite(GrayImg, 'Gray.png');
+    
+    sizeMask = segmentImageforSize(GrayImg);
+    imwrite(sizeMask, 'forSize.png');
+    hold on
+    [Scenters, Sradii] = imfindcircles(sizeMask, [30 70],'ObjectPolarity','bright', ...
+        'Sensitivity', 0.85,'EdgeThreshold',0.05);
+    sizeCircles = viscircles(Scenters, Sradii, 'Color', 'r');
+    % how many circles we have
+    [n, columns] = size(Scenters);
+    sizes = zeros(1, n);
+    % add sizes of circles in
+    disp('find objects N: ');
+    disp(n);
+    disp('length Sradii');
+    disp(length(Sradii));
+    if (length(Sradii)>0)
+        plot(Scenters(:,1), Scenters(:,2),'r*');
+        for a = 1:n
+            area=  Sradii(a)*Sradii(a)*pi;
+            if (area > 8000)
+                sizes(a) = 1;
+            else
+                sizes(a) = 0;
+            end
+        end
+    elseif (length(Bradii)+length(Gradii)+length(Yradii) ~= length(Sradii))
+            colors(1) = 5; 
+    end
+    
+    % add in colors
+    colors = zeros(1,n);
+    if (blues > 0)
+        for b = 1:blues
+            colors(b) = 1;
+        end
+    end
+    if (greens > 0)
+        for g = 1:greens
+            colors(blues+g) = 2;
+        end
+    end
+    if (yellows>0)
+        for y = 1:yellows
+            colors(blues + greens + y) = 3;
+        end
+    end
+end
 end

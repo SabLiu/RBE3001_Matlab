@@ -1,1 +1,7 @@
 src/*~
+src/*.png
+src/*.csv
+*.png
+*.csv
+*.jpg
+src/*.jpg
