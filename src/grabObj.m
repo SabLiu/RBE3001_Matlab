@@ -61,6 +61,10 @@ load 'T0check.mat'
 % run first time to find objects
 [colors, locations, sizes] = findObjs();
 [m,numObjects] = size(colors);
+% disp('colors');
+% disp(colors);
+% disp('sizes');
+% disp(sizes);
 
 % find points of objects in robot's reference frame
 TworldPoints = transpose(locations);
@@ -72,16 +76,16 @@ for col = 1:numObjects
 end
 roboPoints = T0_check* [TworldPoints;  addBottom];
 
-% these variables are used for trajectory generation. 
-timeSteps = 60;
-timeInts = 0.025;
-totalTime = 1.5; 
+% these variables are used for trajectory generation.
+timeSteps = 50;
+timeInts = 0.05;
+totalTime = 2.5;
 %% MAIN LOOP
-% colors(1) will be 5 if there are no more circles detected. 
+% colors(1) will be 5 if there are no more circles detected.
 % colors is returned by findObjs()
 while (colors(1) ~= 5)
     % ikin to get the joint variables
-    roboPoints(3) = 80;
+    roboPoints(3,1) = 80;
     q = ikin(roboPoints(1:3, 1));
     %% Generate trajectory
     % get current position
@@ -101,7 +105,7 @@ while (colors(1) ~= 5)
     enc1 = solveCubic(C1);
     enc2 = solveCubic(C2);
     enc3 = solveCubic(C3);
-    % concatenate all 3 encoder paths 
+    % concatenate all 3 encoder paths
     all3Joints = [enc1; enc2; enc3];
     % iterate through each column in all3Joints and send to PID server
     for c = 1:timeSteps
@@ -125,19 +129,9 @@ while (colors(1) ~= 5)
     FWK = fwkin3001(returnPacket(1)*encoderToAngle,returnPacket(4)*encoderToAngle,returnPacket(7)*encoderToAngle);
     X = FWK(1,4);
     Y = FWK(2, 4);
-	% apply offsets
-    % these are values from testing
-    if (X>200)
-       extraX = 10;  
-    else 
-        extraX = 7; 
-    end
-    if (Y>0)
-        extraY = -20;
-        extraX = extraX+20;
-    else
-        extraY = 0;
-    end
+    % apply offsets
+    [extraX, extraY] = determineOffset(X,Y);
+    
     packet = zeros(15, 1, 'single');
     pp.write(STATUS_SERV_ID, packet);
     pause(0.003);
@@ -149,7 +143,7 @@ while (colors(1) ~= 5)
     qInitial = [returnPacket(1)*encoderToAngle;
         returnPacket(4)*encoderToAngle;
         returnPacket(7)*encoderToAngle];
-    % find coefficients for traj. gen. 
+    % find coefficients for traj. gen.
     C1 = generateTraj(0, totalTime, 0, 0, qInitial(1), anglesFinal(1));
     C2 = generateTraj(0, totalTime, 0, 0, qInitial(2), anglesFinal(2));
     C3 = generateTraj(0, totalTime, 0, 0, qInitial(3), anglesFinal(3));
@@ -167,11 +161,12 @@ while (colors(1) ~= 5)
         pause(timeInts);
     end
     
-   %% Grab ball
-    packet = zeros(15, 1, 'single');
+    %% Grab ball
+    disp(generateMsg(colors(1), sizes(1)));
+    packet = zeros(15, 15, 'single');
     packet(1) = 0;
     pp.write(GRIPPER_SERV, packet);
-    pause(1);
+    pause(0.5);
     %% Clear object over walls + other balls
     % find current X and Y
     packet = zeros(15, 1, 'single');
@@ -238,15 +233,28 @@ while (colors(1) ~= 5)
     packet = zeros(15, 1, 'single');
     packet(1) = 1;
     pp.write(GRIPPER_SERV, packet);
+    pause(0.5);
+    
+    %% Move out of the way of new picture
+    q = ikin([50, 125, 30]);
+    packet = zeros(15, 1, 'single');
+    packet(1) = q(1)*angleToEncoder;
+    packet(4) = q(2)*angleToEncoder;
+    packet(7) = q(3)*angleToEncoder;
+    pp.write(PID_SERV_ID, packet);
     pause(1);
     
     % take new snapshot of workspace and find next object
     [colors, locations, sizes] = findObjs();
-    objects = length(colors);
-    [m,numObjects] = size(colors);
+%     disp('colors');
+%     disp(colors);
+%     disp('sizes');
+%     disp(sizes);
+    numObjects = length(colors);
     
     % find points of next object in robot's reference frame
     TworldPoints = transpose(locations);
+    %     [m,numObjects] = size(locations);
     addBottom = zeros(2, numObjects);
     for col = 1:numObjects
         addBottom(2,col) = 1;
