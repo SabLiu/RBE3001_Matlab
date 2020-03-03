@@ -17,7 +17,7 @@ else % big
 end
 end
 % Sorting scheme
-% small     __________         large
+% small     ______R____         large
 % B        |          |         B
 % G        |          |         G
 % Y        |          |         Y
