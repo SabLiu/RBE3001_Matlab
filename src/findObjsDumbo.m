@@ -12,7 +12,8 @@ imwrite(img, 'InputImage.png');
 hold on
 
 %%  Find the colors and locations of the balls
-blueImg = createMaskBlue(img);
+% blueImg = createMaskBlue(img);
+blueImg = createMaskDumbo(img);
 imshow(blueImg); 
 centroids = regionprops( blueImg, 'centroid', ...
     'MajorAxisLength', 'MinorAxisLength');
