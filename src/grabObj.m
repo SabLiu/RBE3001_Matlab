@@ -61,10 +61,6 @@ load 'T0check.mat'
 % run first time to find objects
 [colors, locations, sizes] = findObjs();
 [m,numObjects] = size(colors);
-% disp('colors');
-% disp(colors);
-% disp('sizes');
-% disp(sizes);
 
 % find points of objects in robot's reference frame
 TworldPoints = transpose(locations);
@@ -246,15 +242,10 @@ while (colors(1) ~= 5)
     
     % take new snapshot of workspace and find next object
     [colors, locations, sizes] = findObjs();
-%     disp('colors');
-%     disp(colors);
-%     disp('sizes');
-%     disp(sizes);
     numObjects = length(colors);
     
     % find points of next object in robot's reference frame
     TworldPoints = transpose(locations);
-    %     [m,numObjects] = size(locations);
     addBottom = zeros(2, numObjects);
     for col = 1:numObjects
         addBottom(2,col) = 1;
