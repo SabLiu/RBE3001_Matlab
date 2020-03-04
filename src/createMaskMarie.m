@@ -1,4 +1,4 @@
-function [BW,maskedRGBImage] = createMaskDumbo(RGB)
+function [BW,maskedRGBImage] = createMaskMarie(RGB)
 %createMask  Threshold RGB image using auto-generated code from colorThresholder app.
 %  [BW,MASKEDRGBIMAGE] = createMask(RGB) thresholds image RGB using
 %  auto-generated code from the colorThresholder App. The colorspace and
@@ -14,16 +14,16 @@ function [BW,maskedRGBImage] = createMaskDumbo(RGB)
 I = rgb2lab(RGB);
 
 % Define thresholds for channel 1 based on histogram settings
-channel1Min = 46.553;
-channel1Max = 85.613;
+channel1Min = 58.735;
+channel1Max = 90.326;
 
 % Define thresholds for channel 2 based on histogram settings
-channel2Min = -26.944;
-channel2Max = -6.598;
+channel2Min = -2.671;
+channel2Max = 7.865;
 
 % Define thresholds for channel 3 based on histogram settings
-channel3Min = -54.686;
-channel3Max = -14.507;
+channel3Min = -43.764;
+channel3Max = -11.845;
 
 % Create mask based on chosen histogram thresholds
 sliderBW = (I(:,:,1) >= channel1Min ) & (I(:,:,1) <= channel1Max) & ...

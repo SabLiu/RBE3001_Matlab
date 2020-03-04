@@ -61,10 +61,6 @@ load 'T0check.mat'
 % run first time to find objects
 [colors, locations, sizes] = findObjs();
 [m,numObjects] = size(colors);
-% disp('colors');
-% disp(colors);
-% disp('sizes');
-% disp(sizes);
 
 % find points of objects in robot's reference frame
 TworldPoints = transpose(locations);
@@ -108,6 +104,7 @@ while (colors(1) ~= 5)
     % concatenate all 3 encoder paths
     all3Joints = [enc1; enc2; enc3];
     % iterate through each column in all3Joints and send to PID server
+    clf
     for c = 1:timeSteps
         packet = zeros(15, 1, 'single');
         packet(1) = all3Joints(1,c)*angleToEncoder;
@@ -115,6 +112,9 @@ while (colors(1) ~= 5)
         packet(7) = all3Joints(3,c)*angleToEncoder;
         pp.write(PID_SERV_ID, packet);
         pause(timeInts);
+        F = fwkin3001(packet(1)*encoderToAngle, packet(4)*encoderToAngle, packet(7)*encoderToAngle);
+        p = F(1:3,4);
+        plot3Dpoint(p,'b.');
     end
     %% move down to ball
     % want to go to X,Y, lower Z
@@ -159,6 +159,9 @@ while (colors(1) ~= 5)
         packet(7) = all3Joints(3,c)*angleToEncoder;
         pp.write(PID_SERV_ID, packet);
         pause(timeInts);
+        F = fwkin3001(packet(1)*encoderToAngle, packet(4)*encoderToAngle, packet(7)*encoderToAngle);
+        p = F(1:3,4);
+        plot3Dpoint(p,'g.');
     end
     
     %% Grab ball
@@ -246,20 +249,23 @@ while (colors(1) ~= 5)
     
     % take new snapshot of workspace and find next object
     [colors, locations, sizes] = findObjs();
-%     disp('colors');
-%     disp(colors);
-%     disp('sizes');
-%     disp(sizes);
     numObjects = length(colors);
     
     % find points of next object in robot's reference frame
     TworldPoints = transpose(locations);
-    %     [m,numObjects] = size(locations);
     addBottom = zeros(2, numObjects);
     for col = 1:numObjects
         addBottom(2,col) = 1;
     end
     roboPoints = T0_check* [TworldPoints;  addBottom];
+    
+        ylim([-200 200]);
+    xlim([-50 300]);
+    zlim([-100 150]);
+        xlabel('X axis (mm)'), ylabel('Y axis (mm)'), zlabel('Z axis (mm)');
+        title('Trajectory of End Effector (mm) Grasping Object');
+        set(gca, 'fontsize', 16);
+        grid on;
 end
 
 pp.shutdown();

@@ -1,4 +1,4 @@
-function dumboLocation = findObjsDumbo()
+function marieLocation = findObjsMarie()
 %%   Outputs
 %   LOCATION OF BLUE BALL
 %% Capture & Undistort the image
@@ -13,7 +13,7 @@ hold on
 
 %%  Find the colors and locations of the balls
 % blueImg = createMaskBlue(img);
-blueImg = createMaskDumbo(img);
+blueImg = createMaskMarie(img);
 imshow(blueImg); 
 centroids = regionprops( blueImg, 'centroid', ...
     'MajorAxisLength', 'MinorAxisLength');
@@ -24,17 +24,17 @@ axisMax = 0;
 for i = 1:numCentroids
     if (minAxes(i)>axisMax)
         axisMax = minAxes(i);
-         dumboLocation = Bcentroids(i, :); 
+         marieLocation = Bcentroids(i, :); 
     end
 end 
-[objectsDetected, columns] = size(dumboLocation); 
+[objectsDetected, columns] = size(marieLocation); 
 if (objectsDetected == 0)
-   dumboLocation =  [-100 0];  
+   marieLocation =  [-100 0];  
 end
 imshow('InputImage.png');
 hold on
-plot(dumboLocation(:,1), dumboLocation(:,2),'b*');
+plot(marieLocation(:,1), marieLocation(:,2),'b*');
 % figure out location of the balls in checkerboard reference frame
-worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), dumboLocation);
-dumboLocation = worldPoints;
+worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), marieLocation);
+marieLocation = worldPoints;
 end
