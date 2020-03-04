@@ -13,6 +13,7 @@ load 'T0check.mat';
 img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
 imwrite(img, 'InputImage.png');
 hold on
+clf
 
 %%  Find the colors and locations of the balls
 % 3 separate masks, one for each color
@@ -89,7 +90,9 @@ else
         % figure out location of the balls in checkerboard reference frame
     worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), allCenters);
     locations = worldPoints;
-    disp('Location of object in robot RF'); 
+    disp('Location in cam RF');
+    disp(allCenters);
+    disp('Location of object in checker RF'); 
     disp(locations); 
     if (length(Sradii)>0)
         % plot base circles and find areas
