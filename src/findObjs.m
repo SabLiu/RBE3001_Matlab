@@ -13,9 +13,6 @@ load 'T0check.mat';
 img = undistortImage(imOrig, cameraParams, 'OutputView', 'full');
 imwrite(img, 'InputImage.png');
 hold on
-blues = 0;
-yellows = 0;
-greens = 0;
 
 %%  Find the colors and locations of the balls
 % 3 separate masks, one for each color
@@ -38,12 +35,11 @@ yellowImg = createMaskYellow(img);
 [yellows,m] = size(Ycenters);
 
 allCenters = [Bcenters; Gcenters; Ycenters];
-% disp('initial allCenters');
-% disp(allCenters); 
 
 imshow('InputImage.png');
 hold on
 
+% if no objects detected, then pass invalid output to grabObj()
 if ((length(Bradii)==0) && (length(Gradii) == 0)&& (length(Yradii) ==0))
     colors(1) = 5;
     locations = [0 0];
@@ -54,7 +50,7 @@ else
     imwrite(GrayImg, 'Gray.png');
     
     sizeMask = segmentImageforSize(GrayImg);
-    imwrite(sizeMask, 'forSize.pnframeg');
+    imwrite(sizeMask, 'forSize.png');
     [Scenters, Sradii] = imfindcircles(sizeMask, [30 70],'ObjectPolarity','bright', ...
         'Sensitivity', 0.85,'EdgeThreshold',0.05);
     sizeCircles = viscircles(Scenters, Sradii, 'Color', 'r');
@@ -62,8 +58,8 @@ else
     [n, columns] = size(Scenters);
     sizes = zeros(1, n);
     
-    
-    % add in colors
+    % add in colors. for each color, if there is at least 1 obj of that
+    % color, then plot the circles on the image and get the centers/radii
     colors = zeros(1,n);
     if (blues > 0)
         for b = 1:blues
@@ -71,7 +67,6 @@ else
         end
         blueCircles = viscircles(Bcenters, Bradii, 'Color', 'c');
         plot(Bcenters(:,1), Bcenters(:,2),'b*');
-        
     end
     if (greens > 0)
         for g = 1:greens
@@ -87,31 +82,20 @@ else
         yellowCircles = viscircles(Ycenters, Yradii, 'Color', 'y');
         plot(Ycenters(:,1), Ycenters(:,2),'y*');
     end
-%         disp('old Colors');
-%     disp(colors);
-%     disp('old centers');
-%     disp(allCenters);
+    % make sure that the size circle corresponds to the right centers
     [newColors, newAllCenters] = findClosestBase(Scenters, allCenters, colors);
     colors = newColors;
     allCenters = newAllCenters;
         % figure out location of the balls in checkerboard reference frame
     worldPoints = pointsToWorld(cameraParams, T_cam_to_checker(1:3,1:3), T_cam_to_checker(1:3,4), allCenters);
     locations = worldPoints;
-%     disp('new Colors');
-%     disp(colors);
-%     disp('new centers');
-%     disp(allCenters);
-% 
-%     disp('find objects N: ');
-%     disp(n);
+    disp('Location of object in robot RF'); 
+    disp(locations); 
     if (length(Sradii)>0)
-        % make sure that the size circle corresponds to the right cente
-        
         % plot base circles and find areas
         plot(Scenters(:,1), Scenters(:,2),'r*');
         for a = 1:n
             area=  Sradii(a)*Sradii(a)*pi;
-%             disp(area);
             if (area > 7000)
                 sizes(a) = 1;
             else
